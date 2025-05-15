@@ -64,7 +64,7 @@ if uploaded_file:
     months = pd.date_range(start=min_date, end=max_date, freq='MS').strftime('%B %Y').tolist()
     selected_month = st.sidebar.selectbox("Select Month", months)
 
-        month_start = pd.to_datetime(selected_month, format='%B %Y')
+    month_start = pd.to_datetime(selected_month, format='%B %Y')
     month_end = month_start + pd.offsets.MonthEnd(0)
     date_range = st.sidebar.date_input(
         "Select Date Range",
