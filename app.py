@@ -6,26 +6,35 @@ import pandas as pd
 import plotly.express as px
 from io import BytesIO
 from PIL import Image
-import streamlit.components.v1 as components
 
-# Enhanced background styling and white text
-st.markdown(
-    """
+# Theme toggle
+theme = st.sidebar.radio("Theme", ["Light", "Dark"])
+
+# Apply theme styles
+if theme == "Dark":
+    bg_color = "#DA362C"
+    text_color = "white"
+    chart_colors = ["#FFFFFF", "#FFD700", "#1E90FF"]
+else:
+    bg_color = "white"
+    text_color = "black"
+    chart_colors = px.colors.qualitative.Set1
+
+# Styling injection
+st.markdown(f"""
     <style>
-        .stApp, .block-container, header, footer, .css-18ni7ap, .css-1d391kg, .css-1v0mbdj {
-            background-color: #DA362C !important;
-            color: white !important;
-        }
-        .css-1v0mbdj .css-1cpxqw2 {  /* Sidebar background */
-            background-color: #DA362C !important;
-        }
-        h1, h2, h3, h4, h5, h6, p, label, span, .stMarkdown, .stTextInput > div > div > input {
-            color: white !important;
-        }
+        .stApp, .block-container, header, footer, .css-18ni7ap, .css-1d391kg, .css-1v0mbdj {{
+            background-color: {bg_color} !important;
+            color: {text_color} !important;
+        }}
+        .css-1v0mbdj .css-1cpxqw2 {{
+            background-color: {bg_color} !important;
+        }}
+        h1, h2, h3, h4, h5, h6, p, label, span, .stMarkdown, .stTextInput > div > div > input {{
+            color: {text_color} !important;
+        }}
     </style>
-    """,
-    unsafe_allow_html=True
-)
+""", unsafe_allow_html=True)
 
 # Display logo
 logo = Image.open("The Roc.png")
@@ -47,12 +56,6 @@ if uploaded_file:
     df['DestinationTotes'] = pd.to_numeric(df['DestinationTotes'], errors='coerce')
     df['TotalRefills'] = pd.to_numeric(df['TotalRefills'], errors='coerce')
 
-    # Debug output
-    with st.expander("🔍 Show Debug Info"):
-        st.write("Column names:", df.columns.tolist())
-        st.write("Data types:", df.dtypes)
-        st.write("Sample data:", df.head())
-
     # Sidebar filters
     st.sidebar.header("Filters")
     users = st.sidebar.multiselect("Filter by User", options=df['Username'].dropna().unique(), default=df['Username'].dropna().unique())
@@ -60,21 +63,17 @@ if uploaded_file:
     min_date, max_date = df['Date'].min(), df['Date'].max()
     date_range = st.sidebar.date_input("Filter by Date Range (DD/MM/YYYY)", [min_date, max_date], min_value=min_date, max_value=max_date, format="DD/MM/YYYY")
 
-    # Data field selection for charts
     metrics_to_show = st.sidebar.multiselect(
         "Select Metrics to Display in Charts",
         options=["SourceTotes", "DestinationTotes", "TotalRefills"],
         default=["SourceTotes", "DestinationTotes", "TotalRefills"]
     )
 
-    # Filter DataFrame
     filtered_df = df[
         (df['Username'].isin(users)) &
         (df['Workstations'].isin(workstations)) &
         (df['Date'].dt.date >= date_range[0]) & (df['Date'].dt.date <= date_range[1])
     ]
-
-    color_scheme = ["#FFFFFF", "#FFD700", "#1E90FF"]
 
     st.markdown("### 📊 Summary Metrics")
     col1, col2, col3 = st.columns(3)
@@ -85,21 +84,21 @@ if uploaded_file:
     st.markdown("### 📈 Performance Over Time")
     time_df = filtered_df.groupby('Date').sum(numeric_only=True).reset_index()
     if metrics_to_show:
-        fig_time = px.line(time_df, x='Date', y=metrics_to_show, title='Operational Totals Over Time', color_discrete_sequence=color_scheme)
+        fig_time = px.line(time_df, x='Date', y=metrics_to_show, title='Operational Totals Over Time', color_discrete_sequence=chart_colors)
         st.plotly_chart(fig_time, use_container_width=True)
 
     st.markdown("### 👤 Performance by User")
     user_df = filtered_df.groupby('Username').sum(numeric_only=True).reset_index()
     if metrics_to_show:
         user_df = user_df.sort_values(by=metrics_to_show[0], ascending=False)
-        fig_user = px.bar(user_df, x='Username', y=metrics_to_show, barmode='group', title='Operations per User', color_discrete_sequence=color_scheme)
+        fig_user = px.bar(user_df, x='Username', y=metrics_to_show, barmode='group', title='Operations per User', color_discrete_sequence=chart_colors)
         st.plotly_chart(fig_user, use_container_width=True)
 
     st.markdown("### 🛠️ Performance by Workstation")
     ws_df = filtered_df.groupby('Workstations').sum(numeric_only=True).reset_index()
     if metrics_to_show:
         ws_df = ws_df.sort_values(by=metrics_to_show[0], ascending=False)
-        fig_ws = px.bar(ws_df, x='Workstations', y=metrics_to_show, barmode='group', title='Operations per Workstation', color_discrete_sequence=color_scheme)
+        fig_ws = px.bar(ws_df, x='Workstations', y=metrics_to_show, barmode='group', title='Operations per Workstation', color_discrete_sequence=chart_colors)
         st.plotly_chart(fig_ws, use_container_width=True)
 
     st.markdown("### ⚙️ Efficiency Score")
@@ -107,10 +106,9 @@ if uploaded_file:
     filtered_df['Efficiency'] = filtered_df['TotalRefills'] / (filtered_df['SourceTotes'] + filtered_df['DestinationTotes'])
     eff_df = filtered_df.groupby('Username')['Efficiency'].mean().reset_index()
     eff_df = eff_df.sort_values(by='Efficiency', ascending=False)
-    fig_eff = px.bar(eff_df, x='Username', y='Efficiency', title='Average Efficiency per User', color_discrete_sequence=color_scheme)
+    fig_eff = px.bar(eff_df, x='Username', y='Efficiency', title='Average Efficiency per User', color_discrete_sequence=chart_colors)
     st.plotly_chart(fig_eff, use_container_width=True)
 
-    # Download filtered data
     output = BytesIO()
     filtered_df.to_csv(output, index=False)
     st.download_button("Download Filtered CSV", data=output.getvalue(), file_name="filtered_picking_data.csv", mime="text/csv")
