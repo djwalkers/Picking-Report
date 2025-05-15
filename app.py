@@ -103,13 +103,13 @@ if uploaded_file:
     user_df = user_df[user_df[metrics_to_show[0]] > 0]
     user_df = user_df.sort_values(by=metrics_to_show[0], ascending=False)
     fig_user = px.bar(
-    user_df,
-    x='Username', y=metrics_to_show[0], color='Username',
-    title='Total Operations per User',
-    color_discrete_sequence=chart_colors, text=metrics_to_show[0]
-)
+        user_df,
+        x='Username', y=metrics_to_show[0], color='Username',
+        title='Total Operations per User',
+        color_discrete_sequence=chart_colors, text=metrics_to_show[0]
+    )
 fig_user.update_traces(textposition='outside')
-        st.plotly_chart(fig_user, use_container_width=True)  # fixed indentation
+    st.plotly_chart(fig_user, use_container_width=True)  # fixed indentation
 
     st.markdown("### 🛠️ Performance by Workstation")
     ws_df = filtered_df.groupby('Workstations').sum(numeric_only=True).reset_index()
@@ -138,4 +138,3 @@ fig_user.update_traces(textposition='outside')
 
 else:
     st.info("Please upload a CSV file to begin.")
-
