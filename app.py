@@ -110,7 +110,7 @@ if uploaded_file:
         fig_user = px.bar(
             user_df,
             x='Username', y=metrics_to_show[0], color='Username',
-            animation_frame='Date', title='Operations per User Over Time',
+            title='Operations per User Over Time',
             color_discrete_sequence=chart_colors, text=metrics_to_show[0]
         )
         fig_user.update_traces(textposition='outside')
@@ -143,5 +143,6 @@ if uploaded_file:
 
 else:
     st.info("Please upload a CSV file to begin.")
+
 
 
