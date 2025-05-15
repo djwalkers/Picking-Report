@@ -102,7 +102,7 @@ if uploaded_file:
     user_df = filtered_df.groupby('Username').sum(numeric_only=True).reset_index()
     user_df = user_df[user_df[metrics_to_show[0]] > 0]
     user_df = user_df.sort_values(by=metrics_to_show[0], ascending=False)
-        fig_user = px.bar(
+    fig_user = px.bar(
             user_df,
             x='Username', y=metrics_to_show[0], color='Username',
             title='Total Operations per User',
@@ -138,6 +138,7 @@ if uploaded_file:
 
 else:
     st.info("Please upload a CSV file to begin.")
+
 
 
 
