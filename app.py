@@ -35,9 +35,12 @@ if uploaded_file:
     min_date, max_date = df['Date'].min(), df['Date'].max()
     date_range = st.sidebar.date_input("Filter by Date Range (DD/MM/YYYY)", [min_date, max_date], min_value=min_date, max_value=max_date, format="DD/MM/YYYY")
 
-    source_on = st.sidebar.multiselect("Include Source Totes > 0?", options=["Yes"], default=["Yes"])
-    dest_on = st.sidebar.multiselect("Include Destination Totes > 0?", options=["Yes"], default=["Yes"])
-    refill_on = st.sidebar.multiselect("Include Refills > 0?", options=["Yes"], default=["Yes"])
+    # Data field selection for charts
+    metrics_to_show = st.sidebar.multiselect(
+        "Select Metrics to Display in Charts",
+        options=["SourceTotes", "DestinationTotes", "TotalRefills"],
+        default=["SourceTotes", "DestinationTotes", "TotalRefills"]
+    )
 
     # Filter DataFrame
     filtered_df = df[
@@ -45,13 +48,6 @@ if uploaded_file:
         (df['Workstations'].isin(workstations)) &
         (df['Date'].dt.date >= date_range[0]) & (df['Date'].dt.date <= date_range[1])
     ]
-
-    if "Yes" in source_on:
-        filtered_df = filtered_df[filtered_df['SourceTotes'] > 0]
-    if "Yes" in dest_on:
-        filtered_df = filtered_df[filtered_df['DestinationTotes'] > 0]
-    if "Yes" in refill_on:
-        filtered_df = filtered_df[filtered_df['TotalRefills'] > 0]
 
     st.markdown("### 📊 Summary Metrics")
     col1, col2, col3 = st.columns(3)
@@ -61,18 +57,21 @@ if uploaded_file:
 
     st.markdown("### 📈 Performance Over Time")
     time_df = filtered_df.groupby('Date').sum(numeric_only=True).reset_index()
-    fig_time = px.line(time_df, x='Date', y=['SourceTotes', 'DestinationTotes', 'TotalRefills'], title='Operational Totals Over Time')
-    st.plotly_chart(fig_time, use_container_width=True)
+    if metrics_to_show:
+        fig_time = px.line(time_df, x='Date', y=metrics_to_show, title='Operational Totals Over Time')
+        st.plotly_chart(fig_time, use_container_width=True)
 
     st.markdown("### 👤 Performance by User")
     user_df = filtered_df.groupby('Username').sum(numeric_only=True).reset_index()
-    fig_user = px.bar(user_df, x='Username', y=['SourceTotes', 'DestinationTotes', 'TotalRefills'], barmode='group', title='Operations per User')
-    st.plotly_chart(fig_user, use_container_width=True)
+    if metrics_to_show:
+        fig_user = px.bar(user_df, x='Username', y=metrics_to_show, barmode='group', title='Operations per User')
+        st.plotly_chart(fig_user, use_container_width=True)
 
     st.markdown("### 🛠️ Performance by Workstation")
     ws_df = filtered_df.groupby('Workstations').sum(numeric_only=True).reset_index()
-    fig_ws = px.bar(ws_df, x='Workstations', y=['SourceTotes', 'DestinationTotes', 'TotalRefills'], barmode='group', title='Operations per Workstation')
-    st.plotly_chart(fig_ws, use_container_width=True)
+    if metrics_to_show:
+        fig_ws = px.bar(ws_df, x='Workstations', y=metrics_to_show, barmode='group', title='Operations per Workstation')
+        st.plotly_chart(fig_ws, use_container_width=True)
 
     st.markdown("### ⚙️ Efficiency Score")
     filtered_df['Efficiency'] = filtered_df['TotalRefills'] / (filtered_df['SourceTotes'] + filtered_df['DestinationTotes'])
