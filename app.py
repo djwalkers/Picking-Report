@@ -23,7 +23,7 @@ else:
 # Styling injection
 st.markdown(f"""
     <style>
-        .stApp, .block-container, header, footer, .css-18ni7ap, .css-1d391kg, .css-1v0mbdj {{
+        .stApp, .block-container, header, footer, .css-18ni7ap, .css-1d391kg, .css-1v0mbdj, .css-6qob1r, .st-emotion-cache-1v0mbdj {{
             background-color: {bg_color} !important;
             color: {text_color} !important;
         }}
@@ -84,7 +84,10 @@ if uploaded_file:
     st.markdown("### 📈 Performance Over Time")
     time_df = filtered_df.groupby('Date').sum(numeric_only=True).reset_index()
     if metrics_to_show:
-        fig_time = px.line(time_df, x='Date', y=metrics_to_show, title='Operational Totals Over Time', color_discrete_sequence=chart_colors)
+        fig_time = px.line(
+            time_df, x='Date', y=metrics_to_show, title='Operational Totals Over Time',
+            color_discrete_sequence=chart_colors, animation_frame='Date' if 'Date' in time_df else None
+        )
         st.plotly_chart(fig_time, use_container_width=True)
 
     st.markdown("### 👤 Performance by User")
