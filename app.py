@@ -9,19 +9,29 @@ st.set_page_config(page_title="Picking Performance Dashboard", layout="wide")
 st.title("📦 Picking Performance Dashboard")
 st.markdown("Upload your Picking Performance CSV file to begin analysis.")
 
+import streamlit as st
+import pandas as pd
+import plotly.express as px
+from io import BytesIO
+
+st.set_page_config(page_title="Picking Performance Dashboard", layout="wide")
+
+st.title("📦 Picking Performance Dashboard")
+st.markdown("Upload your Picking Performance CSV file to begin analysis.")
+
 # File upload
 uploaded_file = st.file_uploader("Upload CSV", type="csv")
 
 if uploaded_file:
     df = pd.read_csv(uploaded_file)
-    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
+    df['Date'] = pd.to_datetime(df['Date'], dayfirst=True, errors='coerce')
 
     # Sidebar filters
     st.sidebar.header("Filters")
     users = st.sidebar.multiselect("Filter by User", options=df['Username'].unique(), default=df['Username'].unique())
     workstations = st.sidebar.multiselect("Filter by Workstation", options=df['Workstations'].unique(), default=df['Workstations'].unique())
     min_date, max_date = df['Date'].min(), df['Date'].max()
-    date_range = st.sidebar.date_input("Filter by Date Range", [min_date, max_date], min_value=min_date, max_value=max_date)
+    date_range = st.sidebar.date_input("Filter by Date Range (DD/MM/YYYY)", [min_date, max_date], min_value=min_date, max_value=max_date, format="DD/MM/YYYY")
 
     # Filter DataFrame
     filtered_df = df[
