@@ -66,6 +66,7 @@ if uploaded_file:
 
     month_start = pd.to_datetime(selected_month, format='%B %Y')
     month_end = month_start + pd.offsets.MonthEnd(0)
+
     date_range = st.sidebar.date_input(
         "Select Date Range",
         [month_start.date(), month_end.date()],
