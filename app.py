@@ -118,6 +118,10 @@ if uploaded_file:
     fig_eff = px.bar(eff_df, x='Username', y='Efficiency', title='Average Efficiency per User', color_discrete_sequence=chart_colors)
     st.plotly_chart(fig_eff, use_container_width=True)
 
+    # Best average performer
+    best_user = eff_df.iloc[0]
+    st.success(f"🏆 Best Average Efficiency: {best_user['Username']} with score {best_user['Efficiency']:.2f}")
+
     output = BytesIO()
     filtered_df.to_csv(output, index=False)
     st.download_button("Download Filtered CSV", data=output.getvalue(), file_name="filtered_picking_data.csv", mime="text/csv")
