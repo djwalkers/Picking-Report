@@ -101,6 +101,7 @@ if uploaded_file:
     st.markdown("### 👤 Performance by User")
     user_df = filtered_df.groupby(['Date', 'Username']).sum(numeric_only=True).reset_index()
     user_df = user_df[user_df[metrics_to_show[0]] > 0]
+    user_df = user_df[user_df[metrics_to_show[0]] > 0]
     if metrics_to_show:
         user_df = user_df.sort_values(by=metrics_to_show[0], ascending=False)
         fig_user = px.bar(
