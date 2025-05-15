@@ -103,6 +103,10 @@ if uploaded_file:
     if metrics_to_show:
         metric = metrics_to_show[0]
         user_df = user_df[user_df[metric] > 0]
+        user_df = user_df.sort_values(by=["Date", metric], ascending=[True, False])
+    if metrics_to_show:
+        metric = metrics_to_show[0]
+        user_df = user_df[user_df[metric] > 0]
     user_df = user_df[user_df[metrics_to_show[0]] > 0]
     user_df = user_df[user_df[metrics_to_show[0]] > 0]
     if metrics_to_show:
@@ -143,6 +147,7 @@ if uploaded_file:
 
 else:
     st.info("Please upload a CSV file to begin.")
+
 
 
 
