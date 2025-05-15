@@ -76,6 +76,7 @@ if uploaded_file:
         st.plotly_chart(fig_ws, use_container_width=True)
 
     st.markdown("### ⚙️ Efficiency Score")
+    st.caption("Efficiency = Total Refills / (Source Totes + Destination Totes). This gives a rough measure of how many refills are completed per tote moved.")
     filtered_df['Efficiency'] = filtered_df['TotalRefills'] / (filtered_df['SourceTotes'] + filtered_df['DestinationTotes'])
     eff_df = filtered_df.groupby('Username')['Efficiency'].mean().reset_index()
     eff_df = eff_df.sort_values(by='Efficiency', ascending=False)
