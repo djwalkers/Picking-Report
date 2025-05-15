@@ -35,25 +35,23 @@ if uploaded_file:
     min_date, max_date = df['Date'].min(), df['Date'].max()
     date_range = st.sidebar.date_input("Filter by Date Range (DD/MM/YYYY)", [min_date, max_date], min_value=min_date, max_value=max_date, format="DD/MM/YYYY")
 
-    # Numeric range filters
-    min_src, max_src = int(df['SourceTotes'].min()), int(df['SourceTotes'].max())
-    source_range = st.sidebar.slider("Source Totes Range", min_value=min_src, max_value=max_src, value=(min_src, max_src))
-
-    min_dst, max_dst = int(df['DestinationTotes'].min()), int(df['DestinationTotes'].max())
-    dest_range = st.sidebar.slider("Destination Totes Range", min_value=min_dst, max_value=max_dst, value=(min_dst, max_dst))
-
-    min_ref, max_ref = int(df['TotalRefills'].min()), int(df['TotalRefills'].max())
-    refill_range = st.sidebar.slider("Total Refills Range", min_value=min_ref, max_value=max_ref, value=(min_ref, max_ref))
+    source_on = st.sidebar.multiselect("Include Source Totes > 0?", options=["Yes"], default=["Yes"])
+    dest_on = st.sidebar.multiselect("Include Destination Totes > 0?", options=["Yes"], default=["Yes"])
+    refill_on = st.sidebar.multiselect("Include Refills > 0?", options=["Yes"], default=["Yes"])
 
     # Filter DataFrame
     filtered_df = df[
         (df['Username'].isin(users)) &
         (df['Workstations'].isin(workstations)) &
-        (df['Date'].dt.date >= date_range[0]) & (df['Date'].dt.date <= date_range[1]) &
-        (df['SourceTotes'].between(*source_range)) &
-        (df['DestinationTotes'].between(*dest_range)) &
-        (df['TotalRefills'].between(*refill_range))
+        (df['Date'].dt.date >= date_range[0]) & (df['Date'].dt.date <= date_range[1])
     ]
+
+    if "Yes" in source_on:
+        filtered_df = filtered_df[filtered_df['SourceTotes'] > 0]
+    if "Yes" in dest_on:
+        filtered_df = filtered_df[filtered_df['DestinationTotes'] > 0]
+    if "Yes" in refill_on:
+        filtered_df = filtered_df[filtered_df['TotalRefills'] > 0]
 
     st.markdown("### 📊 Summary Metrics")
     col1, col2, col3 = st.columns(3)
