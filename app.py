@@ -64,18 +64,21 @@ if uploaded_file:
     st.markdown("### 👤 Performance by User")
     user_df = filtered_df.groupby('Username').sum(numeric_only=True).reset_index()
     if metrics_to_show:
+        user_df = user_df.sort_values(by=metrics_to_show[0], ascending=False)
         fig_user = px.bar(user_df, x='Username', y=metrics_to_show, barmode='group', title='Operations per User')
         st.plotly_chart(fig_user, use_container_width=True)
 
     st.markdown("### 🛠️ Performance by Workstation")
     ws_df = filtered_df.groupby('Workstations').sum(numeric_only=True).reset_index()
     if metrics_to_show:
+        ws_df = ws_df.sort_values(by=metrics_to_show[0], ascending=False)
         fig_ws = px.bar(ws_df, x='Workstations', y=metrics_to_show, barmode='group', title='Operations per Workstation')
         st.plotly_chart(fig_ws, use_container_width=True)
 
     st.markdown("### ⚙️ Efficiency Score")
     filtered_df['Efficiency'] = filtered_df['TotalRefills'] / (filtered_df['SourceTotes'] + filtered_df['DestinationTotes'])
     eff_df = filtered_df.groupby('Username')['Efficiency'].mean().reset_index()
+    eff_df = eff_df.sort_values(by='Efficiency', ascending=False)
     fig_eff = px.bar(eff_df, x='Username', y='Efficiency', title='Average Efficiency per User')
     st.plotly_chart(fig_eff, use_container_width=True)
 
