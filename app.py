@@ -1,20 +1,10 @@
-
+# NOTE: set_page_config must be the very first Streamlit command
 import streamlit as st
+st.set_page_config(page_title="Picking Performance Dashboard", layout="wide")
+
 import pandas as pd
 import plotly.express as px
 from io import BytesIO
-
-st.set_page_config(page_title="Picking Performance Dashboard", layout="wide")
-
-st.title("📦 Picking Performance Dashboard")
-st.markdown("Upload your Picking Performance CSV file to begin analysis.")
-
-import streamlit as st
-import pandas as pd
-import plotly.express as px
-from io import BytesIO
-
-st.set_page_config(page_title="Picking Performance Dashboard", layout="wide")
 
 st.title("📦 Picking Performance Dashboard")
 st.markdown("Upload your Picking Performance CSV file to begin analysis.")
