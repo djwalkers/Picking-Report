@@ -5,6 +5,19 @@ st.set_page_config(page_title="Picking Performance Dashboard", layout="wide")
 import pandas as pd
 import plotly.express as px
 from io import BytesIO
+import streamlit.components.v1 as components
+
+# Custom background color using inline CSS
+st.markdown(
+    """
+    <style>
+        .stApp {
+            background-color: #DA362C;
+        }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
 st.title("📦 Picking Performance Dashboard")
 st.markdown("Upload your Picking Performance CSV file to begin analysis.")
