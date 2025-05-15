@@ -5,19 +5,28 @@ st.set_page_config(page_title="Picking Performance Dashboard", layout="wide")
 import pandas as pd
 import plotly.express as px
 from io import BytesIO
+from PIL import Image
 import streamlit.components.v1 as components
 
-# Custom background color using inline CSS
+# Enhanced background styling and white text
 st.markdown(
     """
     <style>
-        .stApp {
-            background-color: #DA362C;
+        .stApp, .block-container, header, footer, .css-18ni7ap {
+            background-color: #DA362C !important;
+            color: white !important;
+        }
+        h1, h2, h3, h4, h5, h6, p, label, span, .stMarkdown, .stTextInput > div > div > input {
+            color: white !important;
         }
     </style>
     """,
     unsafe_allow_html=True
 )
+
+# Display logo
+logo = Image.open("The Roc.png")
+st.image(logo, width=200)
 
 st.title("📦 Picking Performance Dashboard")
 st.markdown("Upload your Picking Performance CSV file to begin analysis.")
@@ -62,6 +71,8 @@ if uploaded_file:
         (df['Date'].dt.date >= date_range[0]) & (df['Date'].dt.date <= date_range[1])
     ]
 
+    color_scheme = ["#FFFFFF", "#FFD700", "#1E90FF"]
+
     st.markdown("### 📊 Summary Metrics")
     col1, col2, col3 = st.columns(3)
     col1.metric("Total Source Totes", int(filtered_df['SourceTotes'].sum()))
@@ -71,21 +82,21 @@ if uploaded_file:
     st.markdown("### 📈 Performance Over Time")
     time_df = filtered_df.groupby('Date').sum(numeric_only=True).reset_index()
     if metrics_to_show:
-        fig_time = px.line(time_df, x='Date', y=metrics_to_show, title='Operational Totals Over Time')
+        fig_time = px.line(time_df, x='Date', y=metrics_to_show, title='Operational Totals Over Time', color_discrete_sequence=color_scheme)
         st.plotly_chart(fig_time, use_container_width=True)
 
     st.markdown("### 👤 Performance by User")
     user_df = filtered_df.groupby('Username').sum(numeric_only=True).reset_index()
     if metrics_to_show:
         user_df = user_df.sort_values(by=metrics_to_show[0], ascending=False)
-        fig_user = px.bar(user_df, x='Username', y=metrics_to_show, barmode='group', title='Operations per User')
+        fig_user = px.bar(user_df, x='Username', y=metrics_to_show, barmode='group', title='Operations per User', color_discrete_sequence=color_scheme)
         st.plotly_chart(fig_user, use_container_width=True)
 
     st.markdown("### 🛠️ Performance by Workstation")
     ws_df = filtered_df.groupby('Workstations').sum(numeric_only=True).reset_index()
     if metrics_to_show:
         ws_df = ws_df.sort_values(by=metrics_to_show[0], ascending=False)
-        fig_ws = px.bar(ws_df, x='Workstations', y=metrics_to_show, barmode='group', title='Operations per Workstation')
+        fig_ws = px.bar(ws_df, x='Workstations', y=metrics_to_show, barmode='group', title='Operations per Workstation', color_discrete_sequence=color_scheme)
         st.plotly_chart(fig_ws, use_container_width=True)
 
     st.markdown("### ⚙️ Efficiency Score")
@@ -93,7 +104,7 @@ if uploaded_file:
     filtered_df['Efficiency'] = filtered_df['TotalRefills'] / (filtered_df['SourceTotes'] + filtered_df['DestinationTotes'])
     eff_df = filtered_df.groupby('Username')['Efficiency'].mean().reset_index()
     eff_df = eff_df.sort_values(by='Efficiency', ascending=False)
-    fig_eff = px.bar(eff_df, x='Username', y='Efficiency', title='Average Efficiency per User')
+    fig_eff = px.bar(eff_df, x='Username', y='Efficiency', title='Average Efficiency per User', color_discrete_sequence=color_scheme)
     st.plotly_chart(fig_eff, use_container_width=True)
 
     # Download filtered data
