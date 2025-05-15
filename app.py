@@ -86,7 +86,7 @@ if uploaded_file:
     if metrics_to_show:
         fig_time = px.line(
             time_df, x='Date', y=metrics_to_show, title='Operational Totals Over Time',
-            color_discrete_sequence=chart_colors, animation_frame='Date' if 'Date' in time_df else None
+            color_discrete_sequence=chart_colors
         )
         st.plotly_chart(fig_time, use_container_width=True)
 
@@ -98,8 +98,9 @@ if uploaded_file:
             user_df,
             x='Username', y=metrics_to_show[0], color='Username',
             animation_frame='Date', title='Operations per User Over Time',
-            color_discrete_sequence=chart_colors
+            color_discrete_sequence=chart_colors, text=metrics_to_show[0]
         )
+        fig_user.update_traces(textposition='outside')
         st.plotly_chart(fig_user, use_container_width=True)
 
     st.markdown("### 🛠️ Performance by Workstation")
