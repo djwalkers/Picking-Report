@@ -17,10 +17,18 @@ if uploaded_file:
     df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
 
     # Sidebar filters
+    st.sidebar.header("Filters")
     users = st.sidebar.multiselect("Filter by User", options=df['Username'].unique(), default=df['Username'].unique())
     workstations = st.sidebar.multiselect("Filter by Workstation", options=df['Workstations'].unique(), default=df['Workstations'].unique())
+    min_date, max_date = df['Date'].min(), df['Date'].max()
+    date_range = st.sidebar.date_input("Filter by Date Range", [min_date, max_date], min_value=min_date, max_value=max_date)
 
-    filtered_df = df[df['Username'].isin(users) & df['Workstations'].isin(workstations)]
+    # Filter DataFrame
+    filtered_df = df[
+        (df['Username'].isin(users)) &
+        (df['Workstations'].isin(workstations)) &
+        (df['Date'].dt.date >= date_range[0]) & (df['Date'].dt.date <= date_range[1])
+    ]
 
     st.markdown("### 📊 Summary Metrics")
     col1, col2, col3 = st.columns(3)
