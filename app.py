@@ -12,9 +12,12 @@ import streamlit.components.v1 as components
 st.markdown(
     """
     <style>
-        .stApp, .block-container, header, footer, .css-18ni7ap {
+        .stApp, .block-container, header, footer, .css-18ni7ap, .css-1d391kg, .css-1v0mbdj {
             background-color: #DA362C !important;
             color: white !important;
+        }
+        .css-1v0mbdj .css-1cpxqw2 {  /* Sidebar background */
+            background-color: #DA362C !important;
         }
         h1, h2, h3, h4, h5, h6, p, label, span, .stMarkdown, .stTextInput > div > div > input {
             color: white !important;
