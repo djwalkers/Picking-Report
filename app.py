@@ -108,7 +108,7 @@ if uploaded_file:
         title='Total Operations per User',
         color_discrete_sequence=chart_colors, text=metrics_to_show[0]
     )
-fig_user.update_traces(textposition='outside')
+    fig_user.update_traces(textposition='outside')
     st.plotly_chart(fig_user, use_container_width=True)  # fixed indentation
 
     st.markdown("### 🛠️ Performance by Workstation")
@@ -138,3 +138,4 @@ fig_user.update_traces(textposition='outside')
 
 else:
     st.info("Please upload a CSV file to begin.")
+
