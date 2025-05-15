@@ -91,10 +91,15 @@ if uploaded_file:
         st.plotly_chart(fig_time, use_container_width=True)
 
     st.markdown("### 👤 Performance by User")
-    user_df = filtered_df.groupby('Username').sum(numeric_only=True).reset_index()
+    user_df = filtered_df.groupby(['Date', 'Username']).sum(numeric_only=True).reset_index()
     if metrics_to_show:
         user_df = user_df.sort_values(by=metrics_to_show[0], ascending=False)
-        fig_user = px.bar(user_df, x='Username', y=metrics_to_show, barmode='group', title='Operations per User', color_discrete_sequence=chart_colors)
+        fig_user = px.bar(
+            user_df,
+            x='Username', y=metrics_to_show[0], color='Username',
+            animation_frame='Date', title='Operations per User Over Time',
+            color_discrete_sequence=chart_colors
+        )
         st.plotly_chart(fig_user, use_container_width=True)
 
     st.markdown("### 🛠️ Performance by Workstation")
