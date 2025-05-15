@@ -14,12 +14,24 @@ uploaded_file = st.file_uploader("Upload CSV", type="csv")
 
 if uploaded_file:
     df = pd.read_csv(uploaded_file)
+
+    # Clean column names and convert data types
+    df.columns = df.columns.str.strip()
     df['Date'] = pd.to_datetime(df['Date'], dayfirst=True, errors='coerce')
+    df['SourceTotes'] = pd.to_numeric(df['SourceTotes'], errors='coerce')
+    df['DestinationTotes'] = pd.to_numeric(df['DestinationTotes'], errors='coerce')
+    df['TotalRefills'] = pd.to_numeric(df['TotalRefills'], errors='coerce')
+
+    # Debug output
+    with st.expander("🔍 Show Debug Info"):
+        st.write("Column names:", df.columns.tolist())
+        st.write("Data types:", df.dtypes)
+        st.write("Sample data:", df.head())
 
     # Sidebar filters
     st.sidebar.header("Filters")
-    users = st.sidebar.multiselect("Filter by User", options=df['Username'].unique(), default=df['Username'].unique())
-    workstations = st.sidebar.multiselect("Filter by Workstation", options=df['Workstations'].unique(), default=df['Workstations'].unique())
+    users = st.sidebar.multiselect("Filter by User", options=df['Username'].dropna().unique(), default=df['Username'].dropna().unique())
+    workstations = st.sidebar.multiselect("Filter by Workstation", options=df['Workstations'].dropna().unique(), default=df['Workstations'].dropna().unique())
     min_date, max_date = df['Date'].min(), df['Date'].max()
     date_range = st.sidebar.date_input("Filter by Date Range (DD/MM/YYYY)", [min_date, max_date], min_value=min_date, max_value=max_date, format="DD/MM/YYYY")
 
