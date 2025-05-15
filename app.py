@@ -100,6 +100,7 @@ if uploaded_file:
 
     st.markdown("### 👤 Performance by User")
     user_df = filtered_df.groupby(['Date', 'Username']).sum(numeric_only=True).reset_index()
+    user_df = user_df[user_df[metrics_to_show[0]] > 0]
     if metrics_to_show:
         user_df = user_df.sort_values(by=metrics_to_show[0], ascending=False)
         fig_user = px.bar(
@@ -113,6 +114,7 @@ if uploaded_file:
 
     st.markdown("### 🛠️ Performance by Workstation")
     ws_df = filtered_df.groupby('Workstations').sum(numeric_only=True).reset_index()
+    ws_df = ws_df[ws_df[metrics_to_show[0]] > 0]
     if metrics_to_show:
         ws_df = ws_df.sort_values(by=metrics_to_show[0], ascending=False)
         fig_ws = px.bar(ws_df, x='Workstations', y=metrics_to_show, barmode='group', title='Operations per Workstation', color_discrete_sequence=chart_colors)
@@ -122,6 +124,7 @@ if uploaded_file:
     st.caption("Efficiency = Total Refills / (Source Totes + Destination Totes). This gives a rough measure of how many refills are completed per tote moved.")
     filtered_df['Efficiency'] = filtered_df['TotalRefills'] / (filtered_df['SourceTotes'] + filtered_df['DestinationTotes'])
     eff_df = filtered_df.groupby('Username')['Efficiency'].mean().reset_index()
+    eff_df = eff_df[eff_df['Efficiency'] > 0]
     eff_df = eff_df.sort_values(by='Efficiency', ascending=False)
     fig_eff = px.bar(eff_df, x='Username', y='Efficiency', title='Average Efficiency per User', color_discrete_sequence=chart_colors)
     st.plotly_chart(fig_eff, use_container_width=True)
@@ -136,4 +139,5 @@ if uploaded_file:
 
 else:
     st.info("Please upload a CSV file to begin.")
+
 
