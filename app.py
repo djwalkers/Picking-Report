@@ -61,7 +61,12 @@ if uploaded_file:
     users = st.sidebar.multiselect("Filter by User", options=df['Username'].dropna().unique(), default=df['Username'].dropna().unique())
     workstations = st.sidebar.multiselect("Filter by Workstation", options=df['Workstations'].dropna().unique(), default=df['Workstations'].dropna().unique())
     min_date, max_date = df['Date'].min(), df['Date'].max()
-    date_range = st.sidebar.date_input("Filter by Date Range (DD/MM/YYYY)", [min_date, max_date], min_value=min_date, max_value=max_date, format="DD/MM/YYYY")
+    months = pd.date_range(start=min_date, end=max_date, freq='MS').strftime('%B %Y').tolist()
+    selected_month = st.sidebar.selectbox("Select Month", months)
+
+    month_start = pd.to_datetime(selected_month)
+    month_end = (month_start + pd.offsets.MonthEnd(0)).date()
+    date_range = st.sidebar.date_input("Select Date Range", [month_start, month_end], min_value=month_start, max_value=month_end, format="DD/MM/YYYY")
 
     metrics_to_show = st.sidebar.multiselect(
         "Select Metrics to Display in Charts",
@@ -138,4 +143,5 @@ if uploaded_file:
 
 else:
     st.info("Please upload a CSV file to begin.")
+
 
