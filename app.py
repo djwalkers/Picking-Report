@@ -64,8 +64,7 @@ if uploaded_file:
     months = pd.date_range(start=min_date, end=max_date, freq='MS').strftime('%B %Y').tolist()
     selected_month = st.sidebar.selectbox("Select Month", months)
 
-    # CORRECT DATE PARSING HERE
-    month_start = pd.to_datetime(selected_month, format='%B %Y')
+    month_start = pd.to_datetime(selected_month)
     month_end = month_start + pd.offsets.MonthEnd(0)
     date_range = st.sidebar.date_input(
         "Select Date Range",
@@ -121,7 +120,7 @@ if uploaded_file:
         color_discrete_sequence=chart_colors, text=metrics_to_show[0]
     )
     fig_user.update_traces(textposition='outside')
-    st.plotly_chart(fig_user, use_container_width=True)
+    st.plotly_chart(fig_user, use_container_width=True)  # fixed indentation
 
     st.markdown("### 🛠️ Performance by Workstation")
     ws_df = filtered_df.groupby('Workstations').sum(numeric_only=True).reset_index()
@@ -140,11 +139,13 @@ if uploaded_file:
     fig_eff = px.bar(eff_df, x='Username', y='Efficiency', title='Average Efficiency per User', color_discrete_sequence=chart_colors)
     st.plotly_chart(fig_eff, use_container_width=True)
 
+    # Best average performer
+    best_user = eff_df.iloc[0]
+    st.success(f"🏆 Best Average Efficiency: {best_user['Username']} with score {best_user['Efficiency']:.2f}")
+
     output = BytesIO()
     filtered_df.to_csv(output, index=False)
     st.download_button("Download Filtered CSV", data=output.getvalue(), file_name="filtered_picking_data.csv", mime="text/csv")
 
 else:
     st.info("Please upload a CSV file to begin.")
-
-
