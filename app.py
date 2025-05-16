@@ -78,23 +78,24 @@ if uploaded_file:
     col1.metric("Total Source Totes", int(filtered_df['SourceTotes'].sum()))
     col2.metric("Total Destination Totes", int(filtered_df['DestinationTotes'].sum()))
     col3.metric("Total Refills", int(filtered_df['TotalRefills'].sum()))
-
     # Best average performer
     best_user = filtered_df.copy()
     best_user['Efficiency'] = best_user['TotalRefills'] / (best_user['SourceTotes'] + best_user['DestinationTotes'])
     best_avg = best_user.groupby('Username')['Efficiency'].mean().reset_index().sort_values(by='Efficiency', ascending=False).iloc[0]
-    col4.markdown(f"<h6>🏆 Top Efficiency</h6><p style='font-size:14px'>{{best_avg['Username']}}<br>{{best_avg['Efficiency']:.2f}}</p>", unsafe_allow_html=True)
+    col4.markdown(f"<h6>🏆 Top Efficiency</h6><p style='font-size:14px'>{best_avg['Username']}<br>{best_avg['Efficiency']:.2f}</p>", unsafe_allow_html=True)
     worst_avg = best_user.groupby('Username')['Efficiency'].mean().reset_index().sort_values(by='Efficiency', ascending=True).iloc[0]
-    col5.markdown(f"<h6>🔻 Lowest Efficiency</h6><p style='font-size:14px'>{{worst_avg['Username']}}<br>{{worst_avg['Efficiency']:.2f}}</p>", unsafe_allow_html=True)
+    col5.markdown(f"<h6>🔻 Lowest Efficiency</h6><p style='font-size:14px'>{worst_avg['Username']}<br>{worst_avg['Efficiency']:.2f}</p>", unsafe_allow_html=True)
 
     st.markdown("### \U0001F4C8 Performance Over Time")
     time_df = filtered_df.groupby('Date').sum(numeric_only=True).reset_index()
     if metrics_to_show:
         fig_time = px.line(
             time_df, x='Date', y=metrics_to_show, title='Operational Totals Over Time',
-            color_discrete_sequence=chart_colors, text=metrics_to_show
+            color_discrete_sequence=chart_colors
         )
-        fig_time.update_traces(textposition='top center')
+        # Add value labels to each trace (one for each metric)
+        for trace in fig_time.data:
+            trace.update(mode='lines+markers+text', text=[f"{y:.0f}" for y in trace.y], textposition='top center')
         st.plotly_chart(fig_time, use_container_width=True)
 
     st.markdown("### \U0001F464 Performance by User")
@@ -142,3 +143,4 @@ if uploaded_file:
 
 else:
     st.info("Please upload a CSV file to begin.")
+
