@@ -32,7 +32,7 @@ st.markdown(f"""
 logo = Image.open("The Roc.png")
 st.image(logo, width=200)
 
-st.title("📦 Picking Performance Dashboard")
+st.title("\U0001F4E6 Picking Performance Dashboard")
 st.markdown("Upload your Picking Performance CSV file to begin analysis.")
 
 # File upload
@@ -73,7 +73,7 @@ if uploaded_file:
         (df['Date'].dt.date >= date_range[0]) & (df['Date'].dt.date <= date_range[1])
     ]
 
-    st.markdown("### 📊 Summary Metrics")
+    st.markdown("### \U0001F4CA Summary Metrics")
     col1, col2, col3, col4, col5 = st.columns(5)
     col1.metric("Total Source Totes", int(filtered_df['SourceTotes'].sum()))
     col2.metric("Total Destination Totes", int(filtered_df['DestinationTotes'].sum()))
@@ -83,20 +83,21 @@ if uploaded_file:
     best_user = filtered_df.copy()
     best_user['Efficiency'] = best_user['TotalRefills'] / (best_user['SourceTotes'] + best_user['DestinationTotes'])
     best_avg = best_user.groupby('Username')['Efficiency'].mean().reset_index().sort_values(by='Efficiency', ascending=False).iloc[0]
-    col4.markdown(f"<h6>🏆 Top Efficiency</h6><p style='font-size:14px'>{best_avg['Username']}<br>{best_avg['Efficiency']:.2f}</p>", unsafe_allow_html=True)
+    col4.markdown(f"<h6>🏆 Top Efficiency</h6><p style='font-size:14px'>{{best_avg['Username']}}<br>{{best_avg['Efficiency']:.2f}}</p>", unsafe_allow_html=True)
     worst_avg = best_user.groupby('Username')['Efficiency'].mean().reset_index().sort_values(by='Efficiency', ascending=True).iloc[0]
-    col5.markdown(f"<h6>🔻 Lowest Efficiency</h6><p style='font-size:14px'>{worst_avg['Username']}<br>{worst_avg['Efficiency']:.2f}</p>", unsafe_allow_html=True)
+    col5.markdown(f"<h6>🔻 Lowest Efficiency</h6><p style='font-size:14px'>{{worst_avg['Username']}}<br>{{worst_avg['Efficiency']:.2f}}</p>", unsafe_allow_html=True)
 
-    st.markdown("### 📈 Performance Over Time")
+    st.markdown("### \U0001F4C8 Performance Over Time")
     time_df = filtered_df.groupby('Date').sum(numeric_only=True).reset_index()
     if metrics_to_show:
         fig_time = px.line(
             time_df, x='Date', y=metrics_to_show, title='Operational Totals Over Time',
-            color_discrete_sequence=chart_colors
+            color_discrete_sequence=chart_colors, text=metrics_to_show
         )
+        fig_time.update_traces(textposition='top center')
         st.plotly_chart(fig_time, use_container_width=True)
 
-    st.markdown("### 👤 Performance by User")
+    st.markdown("### \U0001F464 Performance by User")
     user_df = filtered_df.groupby('Username').sum(numeric_only=True).reset_index()
     user_df = user_df[user_df[metrics_to_show[0]] > 0]
     user_df = user_df.sort_values(by=metrics_to_show[0], ascending=False)
@@ -107,26 +108,33 @@ if uploaded_file:
         color_discrete_sequence=chart_colors, text=metrics_to_show[0]
     )
     fig_user.update_traces(textposition='outside')
-    st.plotly_chart(fig_user, use_container_width=True)  # fixed indentation
+    st.plotly_chart(fig_user, use_container_width=True)
 
-    st.markdown("### 🛠️ Performance by Workstation")
+    st.markdown("### \U0001F6E0️ Performance by Workstation")
     ws_df = filtered_df.groupby('Workstations').sum(numeric_only=True).reset_index()
     ws_df = ws_df[ws_df[metrics_to_show[0]] > 0]
     if metrics_to_show:
         ws_df = ws_df.sort_values(by=metrics_to_show[0], ascending=False)
-        fig_ws = px.bar(ws_df, x='Workstations', y=metrics_to_show, barmode='group', title='Operations per Workstation', color_discrete_sequence=chart_colors)
+        fig_ws = px.bar(
+            ws_df, x='Workstations', y=metrics_to_show, barmode='group',
+            title='Operations per Workstation', color_discrete_sequence=chart_colors,
+            text=metrics_to_show
+        )
+        fig_ws.update_traces(textposition='outside')
         st.plotly_chart(fig_ws, use_container_width=True)
 
-    st.markdown("### ⚙️ Efficiency Score")
+    st.markdown("### \u2699\ufe0f Efficiency Score")
     st.caption("Efficiency = Total Refills / (Source Totes + Destination Totes). This gives a rough measure of how many refills are completed per tote moved.")
     filtered_df['Efficiency'] = filtered_df['TotalRefills'] / (filtered_df['SourceTotes'] + filtered_df['DestinationTotes'])
     eff_df = filtered_df.groupby('Username')['Efficiency'].mean().reset_index()
     eff_df = eff_df[eff_df['Efficiency'] > 0]
     eff_df = eff_df.sort_values(by='Efficiency', ascending=False)
-    fig_eff = px.bar(eff_df, x='Username', y='Efficiency', title='Average Efficiency per User', color_discrete_sequence=chart_colors)
+    fig_eff = px.bar(
+        eff_df, x='Username', y='Efficiency', title='Average Efficiency per User',
+        color_discrete_sequence=chart_colors, text='Efficiency'
+    )
+    fig_eff.update_traces(textposition='outside')
     st.plotly_chart(fig_eff, use_container_width=True)
-
-    
 
     output = BytesIO()
     filtered_df.to_csv(output, index=False)
