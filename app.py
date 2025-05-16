@@ -142,12 +142,16 @@ if uploaded_file:
     eff_df = filtered_df.groupby('Username')['Efficiency'].mean().reset_index()
     eff_df = eff_df[eff_df['Efficiency'] > 0]
     eff_df = eff_df.sort_values(by='Efficiency', ascending=False)
+    # Round efficiency to whole numbers for display
+    eff_df['Efficiency'] = eff_df['Efficiency'].round(0)
+
     fig_eff = px.bar(
         eff_df, x='Username', y='Efficiency', title='Average Efficiency per User',
         color_discrete_sequence=chart_colors, text='Efficiency'
     )
-    fig_eff.update_traces(textposition='outside')
+    fig_eff.update_traces(texttemplate='%{text:.0f}', textposition='outside')
     st.plotly_chart(fig_eff, use_container_width=True)
+
 
     output = BytesIO()
     filtered_df.to_csv(output, index=False)
