@@ -91,8 +91,8 @@ if uploaded_file:
     time_df = filtered_df.groupby('Date').sum(numeric_only=True).reset_index()
     if metrics_to_show:
         fig_time = px.line(
-    time_df, x='Date', y=metrics_to_show, title='Operational Totals Over Time',
-    color_discrete_sequence=chart_colors
+            time_df, x='Date', y=metrics_to_show, title='Operational Totals Over Time',
+            color_discrete_sequence=chart_colors
     )
     # Add value labels to each trace (one for each metric)
     for trace in fig_time.data:
