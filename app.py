@@ -112,31 +112,30 @@ if uploaded_file:
     st.plotly_chart(fig_user, use_container_width=True)
 
     st.markdown("### \U0001F6E0️ Performance by Workstation")
-ws_df = filtered_df.groupby('Workstations').sum(numeric_only=True).reset_index()
+    ws_df = filtered_df.groupby('Workstations').sum(numeric_only=True).reset_index()
 
-# Only proceed if there's at least one valid metric in ws_df and it's not all zeros
-valid_metrics = [metric for metric in metrics_to_show if metric in ws_df.columns and ws_df[metric].sum() > 0]
-if valid_metrics:
-    ws_df = ws_df[ws_df[valid_metrics[0]] > 0]
-    ws_df = ws_df.sort_values(by=valid_metrics[0], ascending=False)
-    if len(valid_metrics) == 1:
-        fig_ws = px.bar(
-            ws_df, x='Workstations', y=valid_metrics[0], barmode='group',
-            title='Operations per Workstation', color_discrete_sequence=chart_colors,
-            text=valid_metrics[0]
-        )
-        fig_ws.update_traces(textposition='outside')
+    # Only proceed if there's at least one valid metric in ws_df and it's not all zeros
+    valid_metrics = [metric for metric in metrics_to_show if metric in ws_df.columns and ws_df[metric].sum() > 0]
+    if valid_metrics:
+        ws_df = ws_df[ws_df[valid_metrics[0]] > 0]
+        ws_df = ws_df.sort_values(by=valid_metrics[0], ascending=False)
+        if len(valid_metrics) == 1:
+            fig_ws = px.bar(
+                ws_df, x='Workstations', y=valid_metrics[0], barmode='group',
+                title='Operations per Workstation', color_discrete_sequence=chart_colors,
+                text=valid_metrics[0]
+            )
+            fig_ws.update_traces(textposition='outside')
+        else:
+            fig_ws = px.bar(
+                ws_df, x='Workstations', y=valid_metrics, barmode='group',
+                title='Operations per Workstation', color_discrete_sequence=chart_colors,
+                text=valid_metrics
+            )
+            fig_ws.update_traces(textposition='outside')
+        st.plotly_chart(fig_ws, use_container_width=True)
     else:
-        fig_ws = px.bar(
-            ws_df, x='Workstations', y=valid_metrics, barmode='group',
-            title='Operations per Workstation', color_discrete_sequence=chart_colors,
-            text=valid_metrics
-        )
-        fig_ws.update_traces(textposition='outside')
-    st.plotly_chart(fig_ws, use_container_width=True)
-else:
-    st.info("No data available for the selected metrics in the current filters.")
-
+        st.info("No data available for the selected metrics in the current filters.")
 
     st.markdown("### \u2699\ufe0f Efficiency Score")
     st.caption("Efficiency = Total Refills / (Source Totes + Destination Totes). This gives a rough measure of how many refills are completed per tote moved.")
@@ -154,6 +153,6 @@ else:
     output = BytesIO()
     filtered_df.to_csv(output, index=False)
     st.download_button("Download Filtered CSV", data=output.getvalue(), file_name="filtered_picking_data.csv", mime="text/csv")
-
 else:
     st.info("Please upload a CSV file to begin.")
+
