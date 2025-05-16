@@ -92,13 +92,10 @@ if uploaded_file:
     if metrics_to_show:
         fig_time = px.line(
             time_df, x='Date', y=metrics_to_show, title='Operational Totals Over Time',
-            color_discrete_sequence=chart_colors
-    )
-    # Add value labels to each trace (one for each metric)
-    for trace in fig_time.data:
-    trace.update(mode='lines+markers+text', text=[f"{y:.0f}" for y in trace.y], textposition='top center')
-    st.plotly_chart(fig_time, use_container_width=True)
-
+            color_discrete_sequence=chart_colors, text=metrics_to_show
+        )
+        fig_time.update_traces(textposition='top center')
+        st.plotly_chart(fig_time, use_container_width=True)
 
     st.markdown("### \U0001F464 Performance by User")
     user_df = filtered_df.groupby('Username').sum(numeric_only=True).reset_index()
@@ -145,4 +142,3 @@ if uploaded_file:
 
 else:
     st.info("Please upload a CSV file to begin.")
-
