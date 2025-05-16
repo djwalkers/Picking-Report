@@ -7,10 +7,18 @@ import plotly.express as px
 from io import BytesIO
 from PIL import Image
 
-# Use your branded theme
-bg_color = "#DA362C"
-text_color = "white"
-chart_colors = ["#FFFFFF", "#FFD700", "#1E90FF"]
+# Theme toggle
+theme = st.sidebar.radio("Theme", ["Light", "Dark"])
+
+# Apply theme styles
+if theme == "Dark":
+    bg_color = "#DA362C"
+    text_color = "white"
+    chart_colors = ["#FFFFFF", "#FFD700", "#1E90FF"]
+else:
+    bg_color = "white"
+    text_color = "black"
+    chart_colors = px.colors.qualitative.Set1
 
 # Styling injection
 st.markdown(f"""
@@ -50,22 +58,19 @@ if uploaded_file:
 
     # Sidebar filters
     st.sidebar.header("Filters")
-    users = st.sidebar.multiselect(
-        "Filter by User",
-        options=df['Username'].dropna().unique(),
-        default=df['Username'].dropna().unique()
-    )
-    workstations = st.sidebar.multiselect(
-        "Filter by Workstation",
-        options=df['Workstations'].dropna().unique(),
-        default=df['Workstations'].dropna().unique()
-    )
+    users = st.sidebar.multiselect("Filter by User", options=df['Username'].dropna().unique(), default=df['Username'].dropna().unique())
+    workstations = st.sidebar.multiselect("Filter by Workstation", options=df['Workstations'].dropna().unique(), default=df['Workstations'].dropna().unique())
     min_date, max_date = df['Date'].min(), df['Date'].max()
+    months = pd.date_range(start=min_date, end=max_date, freq='MS').strftime('%B %Y').tolist()
+    selected_month = st.sidebar.selectbox("Select Month", months)
+
+    month_start = pd.to_datetime(selected_month)
+    month_end = month_start + pd.offsets.MonthEnd(0)
     date_range = st.sidebar.date_input(
-        "Select Date Range (DD/MM/YYYY)",
-        [min_date.date(), max_date.date()],
-        min_value=min_date.date(),
-        max_value=max_date.date(),
+        "Select Date Range",
+        [month_start.date(), month_end.date()],
+        min_value=month_start.date(),
+        max_value=month_end.date(),
         format="DD/MM/YYYY"
     )
 
@@ -87,7 +92,7 @@ if uploaded_file:
     col2.metric("Total Destination Totes", int(filtered_df['DestinationTotes'].sum()))
     col3.metric("Total Refills", int(filtered_df['TotalRefills'].sum()))
 
-    # Best/worst efficiency performers
+    # Best average performer
     best_user = filtered_df.copy()
     best_user['Efficiency'] = best_user['TotalRefills'] / (best_user['SourceTotes'] + best_user['DestinationTotes'])
     best_avg = best_user.groupby('Username')['Efficiency'].mean().reset_index().sort_values(by='Efficiency', ascending=False).iloc[0]
@@ -115,7 +120,7 @@ if uploaded_file:
         color_discrete_sequence=chart_colors, text=metrics_to_show[0]
     )
     fig_user.update_traces(textposition='outside')
-    st.plotly_chart(fig_user, use_container_width=True)
+    st.plotly_chart(fig_user, use_container_width=True)  # fixed indentation
 
     st.markdown("### 🛠️ Performance by Workstation")
     ws_df = filtered_df.groupby('Workstations').sum(numeric_only=True).reset_index()
@@ -133,6 +138,10 @@ if uploaded_file:
     eff_df = eff_df.sort_values(by='Efficiency', ascending=False)
     fig_eff = px.bar(eff_df, x='Username', y='Efficiency', title='Average Efficiency per User', color_discrete_sequence=chart_colors)
     st.plotly_chart(fig_eff, use_container_width=True)
+
+    # Best average performer
+    best_user = eff_df.iloc[0]
+    st.success(f"🏆 Best Average Efficiency: {best_user['Username']} with score {best_user['Efficiency']:.2f}")
 
     output = BytesIO()
     filtered_df.to_csv(output, index=False)
