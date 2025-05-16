@@ -57,7 +57,7 @@ if uploaded_file:
     selected_month = st.sidebar.selectbox("Select Month", months, key="month_select")
 
     # Safe month parsing: always cast to pandas Timestamp for offset math
-        month_start = pd.to_datetime(selected_month, format='%B %Y')
+    month_start = pd.to_datetime(selected_month, format='%B %Y')
     month_start = pd.Timestamp(month_start)  # Force pandas Timestamp for offset math
     month_end = month_start + pd.offsets.MonthEnd(0)
     date_range = st.sidebar.date_input(
