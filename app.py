@@ -1,4 +1,3 @@
-# NOTE: set_page_config must be the very first Streamlit command
 import streamlit as st
 st.set_page_config(page_title="Picking Performance Dashboard", layout="wide")
 
@@ -32,7 +31,7 @@ st.markdown(f"""
 logo = Image.open("The Roc.png")
 st.image(logo, width=200)
 
-st.title("\U0001F4E6 Picking Performance Dashboard")
+st.title("📦 Picking Performance Dashboard")
 st.markdown("Upload your Picking Performance CSV file to begin analysis.")
 
 # File upload
@@ -73,7 +72,7 @@ if uploaded_file:
         (df['Date'].dt.date >= date_range[0]) & (df['Date'].dt.date <= date_range[1])
     ]
 
-    st.markdown("### \U0001F4CA Summary Metrics")
+    st.markdown("### 📊 Summary Metrics")
     col1, col2, col3, col4, col5 = st.columns(5)
     col1.metric("Total Source Totes", int(filtered_df['SourceTotes'].sum()))
     col2.metric("Total Destination Totes", int(filtered_df['DestinationTotes'].sum()))
@@ -86,7 +85,7 @@ if uploaded_file:
     worst_avg = best_user.groupby('Username')['Efficiency'].mean().reset_index().sort_values(by='Efficiency', ascending=True).iloc[0]
     col5.markdown(f"<h6>🔻 Lowest Efficiency</h6><p style='font-size:14px'>{worst_avg['Username']}<br>{worst_avg['Efficiency']:.2f}</p>", unsafe_allow_html=True)
 
-    st.markdown("### \U0001F4C8 Performance Over Time")
+    st.markdown("### 📈 Performance Over Time")
     time_df = filtered_df.groupby('Date').sum(numeric_only=True).reset_index()
     if metrics_to_show:
         fig_time = px.line(
@@ -98,7 +97,7 @@ if uploaded_file:
             trace.update(mode='lines+markers+text', text=[f"{y:.0f}" for y in trace.y], textposition='top center')
         st.plotly_chart(fig_time, use_container_width=True)
 
-    st.markdown("### \U0001F464 Performance by User")
+    st.markdown("### 👤 Performance by User")
     user_df = filtered_df.groupby('Username').sum(numeric_only=True).reset_index()
     user_df = user_df[user_df[metrics_to_show[0]] > 0]
     user_df = user_df.sort_values(by=metrics_to_show[0], ascending=False)
@@ -111,33 +110,33 @@ if uploaded_file:
     fig_user.update_traces(textposition='outside')
     st.plotly_chart(fig_user, use_container_width=True)
 
-    st.markdown("### \U0001F6E0️ Performance by Workstation")
+    st.markdown("### 🛠️ Performance by Workstation")
     ws_df = filtered_df.groupby('Workstations').sum(numeric_only=True).reset_index()
 
     # Only proceed if there's at least one valid metric in ws_df and it's not all zeros
     valid_metrics = [metric for metric in metrics_to_show if metric in ws_df.columns and ws_df[metric].sum() > 0]
     if valid_metrics:
         ws_df = ws_df[ws_df[valid_metrics[0]] > 0]
-        ws_df = ws_df.sort_values(by=valid_metrics[0], ascending=False)
-        if len(valid_metrics) == 1:
-            fig_ws = px.bar(
-                ws_df, x='Workstations', y=valid_metrics[0], barmode='group',
-                title='Operations per Workstation', color_discrete_sequence=chart_colors,
-                text=valid_metrics[0]
-            )
-            fig_ws.update_traces(textposition='outside')
+        if not ws_df.empty:
+            ws_df = ws_df.sort_values(by=valid_metrics[0], ascending=False)
+            # NO VALUE LABELS FOR THIS CHART TO AVOID ERRORS
+            if len(valid_metrics) == 1:
+                fig_ws = px.bar(
+                    ws_df, x='Workstations', y=valid_metrics[0], barmode='group',
+                    title='Operations per Workstation', color_discrete_sequence=chart_colors
+                )
+            else:
+                fig_ws = px.bar(
+                    ws_df, x='Workstations', y=valid_metrics, barmode='group',
+                    title='Operations per Workstation', color_discrete_sequence=chart_colors
+                )
+            st.plotly_chart(fig_ws, use_container_width=True)
         else:
-            fig_ws = px.bar(
-                ws_df, x='Workstations', y=valid_metrics, barmode='group',
-                title='Operations per Workstation', color_discrete_sequence=chart_colors,
-                text=valid_metrics
-            )
-            fig_ws.update_traces(textposition='outside')
-        st.plotly_chart(fig_ws, use_container_width=True)
+            st.info("No data available for the selected metrics in the current filters.")
     else:
         st.info("No data available for the selected metrics in the current filters.")
 
-    st.markdown("### \u2699\ufe0f Efficiency Score")
+    st.markdown("### ⚙️ Efficiency Score")
     st.caption("Efficiency = Total Refills / (Source Totes + Destination Totes). This gives a rough measure of how many refills are completed per tote moved.")
     filtered_df['Efficiency'] = filtered_df['TotalRefills'] / (filtered_df['SourceTotes'] + filtered_df['DestinationTotes'])
     eff_df = filtered_df.groupby('Username')['Efficiency'].mean().reset_index()
@@ -155,3 +154,4 @@ if uploaded_file:
     st.download_button("Download Filtered CSV", data=output.getvalue(), file_name="filtered_picking_data.csv", mime="text/csv")
 else:
     st.info("Please upload a CSV file to begin.")
+
