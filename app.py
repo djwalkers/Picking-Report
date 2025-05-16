@@ -64,17 +64,20 @@ if uploaded_file:
     months = pd.date_range(start=min_date, end=max_date, freq='MS').strftime('%B %Y').tolist()
     selected_month = st.sidebar.selectbox("Select Month", months)
 
-    month_start = pd.to_datetime(selected_month, format='%B %Y')
-    month_start = pd.Timestamp(month_start)  # This ensures it's always a Timestamp!
-    month_end = month_start + pd.offsets.MonthEnd(0)
+    months = pd.date_range(start=min_date, end=max_date, freq='MS').strftime('%B %Y').tolist()
+selected_month = st.sidebar.selectbox("Select Month", months)
 
-    date_range = st.sidebar.date_input(
-        "Select Date Range",
-        [month_start.date(), month_end.date()],
-        min_value=month_start.date(),
-        max_value=month_end.date(),
-        format="DD/MM/YYYY"
-    )
+month_start = pd.to_datetime(selected_month, format='%B %Y')
+month_start = pd.Timestamp(month_start)  # Ensures pandas Timestamp for offset arithmetic
+month_end = month_start + pd.offsets.MonthEnd(0)
+date_range = st.sidebar.date_input(
+    "Select Date Range",
+    [month_start.date(), month_end.date()],
+    min_value=month_start.date(),
+    max_value=month_end.date(),
+    format="DD/MM/YYYY"
+)
+
 
     metrics_to_show = st.sidebar.multiselect(
         "Select Metrics to Display in Charts",
