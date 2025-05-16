@@ -57,8 +57,8 @@ if uploaded_file:
     selected_month = st.sidebar.selectbox("Select Month", months, key="month_select")
 
     # Safe month parsing: always cast to pandas Timestamp for offset math
-    month_start = pd.to_datetime(selected_month, format='%B %Y')
-    month_start = pd.Timestamp(month_start)
+        month_start = pd.to_datetime(selected_month, format='%B %Y')
+    month_start = pd.Timestamp(month_start)  # Force pandas Timestamp for offset math
     month_end = month_start + pd.offsets.MonthEnd(0)
     date_range = st.sidebar.date_input(
         "Select Date Range",
@@ -67,6 +67,7 @@ if uploaded_file:
         max_value=month_end.date(),
         format="DD/MM/YYYY"
     )
+
 
     metrics_to_show = st.sidebar.multiselect(
         "Select Metrics to Display in Charts",
