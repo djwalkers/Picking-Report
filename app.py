@@ -190,7 +190,7 @@ if uploaded_file:
 **Workstation Outliers**  
 <small>
 Workstations with below average efficiency or total refills less than 50% average. This may point to problem areas or underutilized equipment.<br>
-Mean Efficiency: <b>{mean_eff_ws:.2f}</b>, Mean Refills: <b>{mean_refills_ws:.0f}</b>
+Average Efficiency: <b>{mean_eff_ws:.2f}</b>, Average Refills: <b>{mean_refills_ws:.0f}</b>
 </small>
 """, unsafe_allow_html=True)
     if not outlier_ws.empty:
