@@ -160,7 +160,7 @@ if uploaded_file:
 
     st.markdown(f"**Date Range:** {date_start.date()} to {date_end.date()}")
 
-    # --- ⏰ Per Shift Totals Table (fixed: always hides index) ---
+    # --- ⏰ Per Shift Totals Table (index always hidden) ---
     st.markdown("### ⏰ Per Shift Totals")
     shift_df = filtered_df.groupby(['Shift']).agg({
         'SourceTotes': 'sum',
@@ -185,11 +185,12 @@ if uploaded_file:
     outlier_ws = ws_stats[(ws_stats['Eff_Outlier']) | (ws_stats['Refill_Outlier'])]
 
     # --- Outliers section: Workstation Outliers ONLY ---
-    st.markdown("### ⚠️ Outliers (< 50% of Mean)")
+    st.markdown("### 🛑 Workstations Below Expected Performance (< 50% of Average)")
     st.markdown(f"""
-**Workstation Outliers**  
+**Workstations Needing Attention**  
 <small>
-Workstations with below average efficiency or total refills less than 50% average. This may point to problem areas or underutilized equipment.<br>
+Workstations with average efficiency or total refills less than 50% of the overall average.<br>
+<b>Average (“Mean”)</b> is the sum of all values divided by how many there are. It’s used here as a typical performance level.<br>
 Average Efficiency: <b>{mean_eff_ws:.2f}</b>, Average Refills: <b>{mean_refills_ws:.0f}</b>
 </small>
 """, unsafe_allow_html=True)
