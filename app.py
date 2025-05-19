@@ -115,10 +115,14 @@ if uploaded_file:
     # Best average performer
     best_user = filtered_df.copy()
     best_user['Efficiency'] = best_user['TotalRefills'] / (best_user['SourceTotes'] + best_user['DestinationTotes'])
-    best_avg = best_user.groupby('Username')['Efficiency'].mean().reset_index().sort_values(by='Efficiency', ascending=False).iloc[0]
-    col4.markdown(f"<h6>🏆 Top Efficiency</h6><p style='font-size:14px'>{best_avg['Username']}<br>{best_avg['Efficiency']:.2f}</p>", unsafe_allow_html=True)
-    worst_avg = best_user.groupby('Username')['Efficiency'].mean().reset_index().sort_values(by='Efficiency', ascending=True).iloc[0]
-    col5.markdown(f"<h6>🔻 Lowest Efficiency</h6><p style='font-size:14px'>{worst_avg['Username']}<br>{worst_avg['Efficiency']:.2f}</p>", unsafe_allow_html=True)
+    if not best_user.empty:
+        best_avg = best_user.groupby('Username')['Efficiency'].mean().reset_index().sort_values(by='Efficiency', ascending=False).iloc[0]
+        worst_avg = best_user.groupby('Username')['Efficiency'].mean().reset_index().sort_values(by='Efficiency', ascending=True).iloc[0]
+        col4.markdown(f"<h6>🏆 Top Efficiency</h6><p style='font-size:14px'>{best_avg['Username']}<br>{best_avg['Efficiency']:.2f}</p>", unsafe_allow_html=True)
+        col5.markdown(f"<h6>🔻 Lowest Efficiency</h6><p style='font-size:14px'>{worst_avg['Username']}<br>{worst_avg['Efficiency']:.2f}</p>", unsafe_allow_html=True)
+    else:
+        col4.markdown("-")
+        col5.markdown("-")
 
     # --- Additional High-Level Metrics ---
     st.markdown("### 🏅 High-Level Metrics")
@@ -131,9 +135,12 @@ if uploaded_file:
         .head(3)
         .reset_index()
     )
-    st.markdown("#### Top 3 Users by Refills")
-    for idx, row in top3_users.iterrows():
-        st.write(f"{idx+1}. {row['Username']}: {int(row['TotalRefills'])} refills")
+    if not top3_users.empty:
+        st.markdown("#### Top 3 Users by Refills")
+        for idx, row in top3_users.iterrows():
+            st.write(f"{idx+1}. {row['Username']}: {int(row['TotalRefills'])} refills")
+    else:
+        st.info("No data for Top 3 Users.")
 
     # Most Active Workstation
     most_active_ws = filtered_df.groupby('Workstations')['TotalRefills'].sum()
@@ -141,6 +148,8 @@ if uploaded_file:
         ws_name = most_active_ws.idxmax()
         ws_count = most_active_ws.max()
         st.metric("Most Active Workstation", f"{ws_name} ({int(ws_count)} refills)")
+    else:
+        st.info("No data for workstations.")
 
     # Average Totes per User
     if not filtered_df.empty:
@@ -152,6 +161,8 @@ if uploaded_file:
             .round(0)
         )
         st.metric("Avg Totes per User", int(avg_totes_per_user))
+    else:
+        st.info("No data for users.")
 
     # Day with Most Operations
     daily_totals = filtered_df.groupby('Date')[['SourceTotes','DestinationTotes','TotalRefills']].sum()
@@ -159,6 +170,8 @@ if uploaded_file:
         best_day = daily_totals['TotalRefills'].idxmax()
         best_total = daily_totals['TotalRefills'].max()
         st.metric("Day with Most Refills", f"{best_day.date()} ({int(best_total)} refills)")
+    else:
+        st.info("No data for day with most refills.")
 
     # --- High-Level Summary Table ---
     st.markdown("### 📋 High-Level Summary Table")
@@ -173,9 +186,15 @@ if uploaded_file:
     # --- Performance Over Time ---
     st.markdown("### 📈 Performance Over Time")
     time_df = filtered_df.groupby('Date').sum(numeric_only=True).reset_index()
-    if metrics_to_show and not time_df.empty:
+
+    valid_time_metrics = [
+        col for col in metrics_to_show
+        if col in time_df.columns and time_df[col].notna().sum() > 0 and time_df[col].sum() > 0
+    ]
+
+    if valid_time_metrics and not time_df.empty:
         fig_time = px.line(
-            time_df, x='Date', y=metrics_to_show, title='Operational Totals Over Time',
+            time_df, x='Date', y=valid_time_metrics, title='Operational Totals Over Time',
             color_discrete_sequence=chart_colors
         )
         for trace in fig_time.data:
@@ -188,14 +207,18 @@ if uploaded_file:
     # --- Performance by User ---
     st.markdown("### 👤 Performance by User")
     user_df = filtered_df.groupby('Username').sum(numeric_only=True).reset_index()
-    if metrics_to_show and not user_df.empty and metrics_to_show[0] in user_df.columns and user_df[metrics_to_show[0]].sum() > 0:
-        user_df = user_df[user_df[metrics_to_show[0]] > 0]
-        user_df = user_df.sort_values(by=metrics_to_show[0], ascending=False)
+    valid_user_metrics = [
+        col for col in metrics_to_show
+        if col in user_df.columns and user_df[col].notna().sum() > 0 and user_df[col].sum() > 0
+    ]
+    if valid_user_metrics and not user_df.empty:
+        user_df = user_df[user_df[valid_user_metrics[0]] > 0]
+        user_df = user_df.sort_values(by=valid_user_metrics[0], ascending=False)
         fig_user = px.bar(
             user_df,
-            x='Username', y=metrics_to_show[0], color='Username',
+            x='Username', y=valid_user_metrics[0], color='Username',
             title='Total Operations per User',
-            color_discrete_sequence=chart_colors, text=metrics_to_show[0]
+            color_discrete_sequence=chart_colors, text=valid_user_metrics[0]
         )
         fig_user.update_traces(textposition='outside', marker_line_width=0, marker_line_color="#333", textfont_size=16)
         fig_user = style_chart(fig_user)
@@ -206,26 +229,26 @@ if uploaded_file:
     # --- Performance by Workstation ---
     st.markdown("### 🛠️ Performance by Workstation")
     ws_df = filtered_df.groupby('Workstations').sum(numeric_only=True).reset_index()
-    valid_metrics = [metric for metric in metrics_to_show if metric in ws_df.columns and ws_df[metric].sum() > 0]
-    if valid_metrics:
-        ws_df = ws_df[ws_df[valid_metrics[0]] > 0]
-        if not ws_df.empty:
-            ws_df = ws_df.sort_values(by=valid_metrics[0], ascending=False)
-            if len(valid_metrics) == 1:
-                fig_ws = px.bar(
-                    ws_df, x='Workstations', y=valid_metrics[0], barmode='group',
-                    title='Operations per Workstation', color_discrete_sequence=chart_colors
-                )
-            else:
-                fig_ws = px.bar(
-                    ws_df, x='Workstations', y=valid_metrics, barmode='group',
-                    title='Operations per Workstation', color_discrete_sequence=chart_colors
-                )
-            fig_ws.update_traces(marker_line_width=0, marker_line_color="#333")
-            fig_ws = style_chart(fig_ws)
-            st.plotly_chart(fig_ws, use_container_width=True)
+    valid_ws_metrics = [
+        col for col in metrics_to_show
+        if col in ws_df.columns and ws_df[col].notna().sum() > 0 and ws_df[col].sum() > 0
+    ]
+    if valid_ws_metrics and not ws_df.empty:
+        ws_df = ws_df[ws_df[valid_ws_metrics[0]] > 0]
+        ws_df = ws_df.sort_values(by=valid_ws_metrics[0], ascending=False)
+        if len(valid_ws_metrics) == 1:
+            fig_ws = px.bar(
+                ws_df, x='Workstations', y=valid_ws_metrics[0], barmode='group',
+                title='Operations per Workstation', color_discrete_sequence=chart_colors
+            )
         else:
-            st.info("No data available for the selected metrics in the current filters.")
+            fig_ws = px.bar(
+                ws_df, x='Workstations', y=valid_ws_metrics, barmode='group',
+                title='Operations per Workstation', color_discrete_sequence=chart_colors
+            )
+        fig_ws.update_traces(marker_line_width=0, marker_line_color="#333")
+        fig_ws = style_chart(fig_ws)
+        st.plotly_chart(fig_ws, use_container_width=True)
     else:
         st.info("No data available for the selected metrics in the current filters.")
 
@@ -254,5 +277,4 @@ if uploaded_file:
     st.download_button("Download Filtered CSV", data=output.getvalue(), file_name="filtered_picking_data.csv", mime="text/csv")
 else:
     st.info("Please upload a CSV file to begin.")
-
 
