@@ -160,13 +160,19 @@ if uploaded_file:
 
     st.markdown(f"**Date Range:** {date_start.date()} to {date_end.date()}")
 
+    # --- ⏰ Per Shift Totals Table (fixed) ---
     st.markdown("### ⏰ Per Shift Totals")
     shift_df = filtered_df.groupby(['Shift']).agg({
         'SourceTotes': 'sum',
         'DestinationTotes': 'sum',
         'TotalRefills': 'sum'
     }).reset_index()
-    st.dataframe(shift_df.style.format(precision=0), use_container_width=True)
+    # Remove accidental index/unnamed columns
+    shift_df = shift_df.loc[:, ~shift_df.columns.str.contains('^Unnamed')]
+    st.dataframe(
+        shift_df[['Shift', 'SourceTotes', 'DestinationTotes', 'TotalRefills']],
+        use_container_width=True
+    )
 
     # Outlier calculation
     ws_stats = filtered_df.groupby('Workstations')[['TotalRefills','SourceTotes','DestinationTotes']].sum().reset_index()
