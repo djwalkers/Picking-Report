@@ -193,11 +193,17 @@ if uploaded_file:
     ws_stats['Refill_Outlier'] = ws_stats['TotalRefills'] < (0.5 * mean_refills_ws)
     outlier_ws = ws_stats[(ws_stats['Eff_Outlier']) | (ws_stats['Refill_Outlier'])]
 
-    # --- Outliers section (mean always visible!) ---
+    # --- Outliers section (mean always visible and with descriptions) ---
     st.markdown("### ⚠️ Outliers (< 50% of Mean)")
 
     # User Outliers
-    st.markdown(f"**User Outliers**  \n<small>Mean Efficiency: <b>{mean_eff:.2f}</b>, Mean Refills: <b>{mean_refills:.0f}</b></small>", unsafe_allow_html=True)
+    st.markdown(f"""
+**User Outliers**  
+<small>
+Users whose average efficiency or total refills are less than 50% of the group mean. This may indicate consistently underperforming team members.<br>
+Mean Efficiency: <b>{mean_eff:.2f}</b>, Mean Refills: <b>{mean_refills:.0f}</b>
+</small>
+""", unsafe_allow_html=True)
     if not outlier_users.empty:
         for _, row in outlier_users.iterrows():
             st.markdown(
@@ -207,7 +213,13 @@ if uploaded_file:
         st.info("No user outliers detected in current filters.")
 
     # Day Outliers
-    st.markdown(f"**Day Outliers**  \n<small>Mean Efficiency: <b>{mean_eff_day:.2f}</b>, Mean Refills: <b>{mean_refills_day:.0f}</b></small>", unsafe_allow_html=True)
+    st.markdown(f"""
+**Day Outliers**  
+<small>
+Dates with average efficiency or total refills below 50% of the group mean. These may be days with unexpected operational issues or lower throughput.<br>
+Mean Efficiency: <b>{mean_eff_day:.2f}</b>, Mean Refills: <b>{mean_refills_day:.0f}</b>
+</small>
+""", unsafe_allow_html=True)
     if not outlier_days.empty:
         for _, row in outlier_days.iterrows():
             st.markdown(
@@ -217,7 +229,13 @@ if uploaded_file:
         st.info("No day outliers detected in current filters.")
 
     # Workstation Outliers
-    st.markdown(f"**Workstation Outliers**  \n<small>Mean Efficiency: <b>{mean_eff_ws:.2f}</b>, Mean Refills: <b>{mean_refills_ws:.0f}</b></small>", unsafe_allow_html=True)
+    st.markdown(f"""
+**Workstation Outliers**  
+<small>
+Workstations with average efficiency or total refills less than 50% of the mean. This may point to problem areas or underutilized equipment.<br>
+Mean Efficiency: <b>{mean_eff_ws:.2f}</b>, Mean Refills: <b>{mean_refills_ws:.0f}</b>
+</small>
+""", unsafe_allow_html=True)
     if not outlier_ws.empty:
         for _, row in outlier_ws.iterrows():
             st.markdown(
@@ -286,7 +304,7 @@ if uploaded_file:
             color_discrete_sequence=chart_colors, text=valid_user_metrics[0]
         )
         fig_user.update_traces(textposition='outside', marker_line_width=0, marker_line_color="#333", textfont_size=16)
-        fig_user.update_layout(showlegend=False)  # 👈 This line removes the legend
+        fig_user.update_layout(showlegend=False)  # Removes the legend
         fig_user = style_chart(fig_user)
         st.plotly_chart(fig_user, use_container_width=True)
     else:
@@ -356,4 +374,5 @@ if uploaded_file:
     )
 else:
     st.info("Please upload a CSV file to begin.")
+
 
