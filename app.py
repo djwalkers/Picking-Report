@@ -87,7 +87,6 @@ def assign_shift(dt):
     else:
         return "NIGHT"
 
-# Date Slicers
 def get_date_slicer(min_date, max_date):
     today = pd.Timestamp.today().normalize()
     week_ago = today - pd.Timedelta(days=6)
@@ -105,7 +104,6 @@ def get_date_slicer(min_date, max_date):
     elif slicer == "This Month":
         return [month_ago, today]
     else:
-        # Custom calendar range
         return st.sidebar.date_input(
             "Select Date Range (DD/MM/YYYY)",
             [min_date.date(), max_date.date()],
@@ -117,23 +115,19 @@ def get_date_slicer(min_date, max_date):
 if uploaded_file:
     df = pd.read_csv(uploaded_file)
     df.columns = df.columns.str.strip()
-    # Parse date/time from column A (assuming it's called 'Date' and includes time)
     df['DateTime'] = pd.to_datetime(df['Date'], dayfirst=True, errors='coerce')
     df['Date'] = df['DateTime'].dt.date
     df['Time'] = df['DateTime'].dt.time
     df['Shift'] = df['DateTime'].apply(assign_shift)
-    # Convert metrics to numeric
     df['SourceTotes'] = pd.to_numeric(df['SourceTotes'], errors='coerce')
     df['DestinationTotes'] = pd.to_numeric(df['DestinationTotes'], errors='coerce')
     df['TotalRefills'] = pd.to_numeric(df['TotalRefills'], errors='coerce')
 
-    # Sidebar filters
     st.sidebar.header("Filters")
     users = st.sidebar.multiselect("Filter by User", options=df['Username'].dropna().unique(), default=df['Username'].dropna().unique())
     workstations = st.sidebar.multiselect("Filter by Workstation", options=df['Workstations'].dropna().unique(), default=df['Workstations'].dropna().unique())
     min_dt, max_dt = df['DateTime'].min(), df['DateTime'].max()
     date_range = get_date_slicer(min_dt, max_dt)
-    # For custom, returns [date, date] objects, so convert to pd.Timestamp for slicing
     date_start, date_end = pd.to_datetime(date_range[0]), pd.to_datetime(date_range[1])
 
     metrics_to_show = st.sidebar.multiselect(
@@ -148,7 +142,6 @@ if uploaded_file:
         (df['DateTime'] >= date_start) & (df['DateTime'] <= (date_end + pd.Timedelta(days=1) - pd.Timedelta(seconds=1)))
     ]
 
-    # --- Summary Metrics ---
     st.markdown("### 📊 Summary Metrics")
     col1, col2, col3, col4, col5 = st.columns(5)
     col1.metric("Total Source Totes", int(filtered_df['SourceTotes'].sum()))
@@ -165,10 +158,8 @@ if uploaded_file:
         col4.markdown("-")
         col5.markdown("-")
 
-    # --- Slicer Info ---
     st.markdown(f"**Date Range:** {date_start.date()} to {date_end.date()}")
 
-    # --- Per Shift Totals ---
     st.markdown("### ⏰ Per Shift Totals")
     shift_df = filtered_df.groupby(['Shift']).agg({
         'SourceTotes': 'sum',
@@ -177,13 +168,11 @@ if uploaded_file:
     }).reset_index()
     st.dataframe(shift_df.style.format(precision=0), use_container_width=True)
 
-    # --- Outlier Detection Functions ---
     def flag_outliers(group, col):
         m = group[col].mean()
         group['Is_Outlier'] = group[col] < (0.5 * m)
         return group
 
-    # --- User Outliers ---
     user_stats = filtered_df.groupby('Username')[['TotalRefills','SourceTotes','DestinationTotes']].sum().reset_index()
     user_stats['Efficiency'] = user_stats['TotalRefills'] / (user_stats['SourceTotes'] + user_stats['DestinationTotes'])
     mean_eff = user_stats['Efficiency'].mean()
@@ -192,7 +181,6 @@ if uploaded_file:
     user_stats['Refill_Outlier'] = user_stats['TotalRefills'] < (0.5 * mean_refills)
     outlier_users = user_stats[(user_stats['Eff_Outlier']) | (user_stats['Refill_Outlier'])]
 
-    # --- Day Outliers ---
     day_stats = filtered_df.groupby('Date')[['TotalRefills','SourceTotes','DestinationTotes']].sum().reset_index()
     day_stats['Efficiency'] = day_stats['TotalRefills'] / (day_stats['SourceTotes'] + day_stats['DestinationTotes'])
     mean_eff_day = day_stats['Efficiency'].mean()
@@ -201,7 +189,6 @@ if uploaded_file:
     day_stats['Refill_Outlier'] = day_stats['TotalRefills'] < (0.5 * mean_refills_day)
     outlier_days = day_stats[(day_stats['Eff_Outlier']) | (day_stats['Refill_Outlier'])]
 
-    # --- Workstation Outliers ---
     ws_stats = filtered_df.groupby('Workstations')[['TotalRefills','SourceTotes','DestinationTotes']].sum().reset_index()
     ws_stats['Efficiency'] = ws_stats['TotalRefills'] / (ws_stats['SourceTotes'] + ws_stats['DestinationTotes'])
     mean_eff_ws = ws_stats['Efficiency'].mean()
@@ -210,7 +197,6 @@ if uploaded_file:
     ws_stats['Refill_Outlier'] = ws_stats['TotalRefills'] < (0.5 * mean_refills_ws)
     outlier_ws = ws_stats[(ws_stats['Eff_Outlier']) | (ws_stats['Refill_Outlier'])]
 
-    # --- Outliers Display ---
     st.markdown("### ⚠️ Outliers (< 50% of Mean)")
     if not outlier_users.empty:
         st.markdown("**User Outliers:**")
@@ -227,7 +213,6 @@ if uploaded_file:
     if outlier_users.empty and outlier_days.empty and outlier_ws.empty:
         st.info("No outliers detected in current filters.")
 
-    # --- Performance Over Time ---
     st.markdown("### 📈 Performance Over Time")
     time_df = filtered_df.groupby('Date').sum(numeric_only=True).reset_index()
     valid_time_metrics = []
@@ -252,7 +237,6 @@ if uploaded_file:
     else:
         st.info("No data available for the selected metrics in the current filters.")
 
-    # --- Performance by Shift ---
     st.markdown("### ⏲️ Performance by Shift")
     shift_sum_df = filtered_df.groupby('Shift').sum(numeric_only=True).reset_index()
     if not shift_sum_df.empty:
@@ -267,8 +251,93 @@ if uploaded_file:
     else:
         st.info("No data for shifts in current filters.")
 
-    # --- Performance by User ---
     st.markdown("### 👤 Performance by User")
     user_df = filtered_df.groupby('Username').sum(numeric_only=True).reset_index()
     valid_user_metrics = []
-    for col in
+    for col in metrics_to_show:
+        if (
+            col in user_df.columns
+            and pd.api.types.is_numeric_dtype(user_df[col])
+            and user_df[col].notna().sum() > 0
+            and (user_df[col].fillna(0) != 0).any()
+        ):
+            valid_user_metrics.append(col)
+    if valid_user_metrics and not user_df.empty:
+        user_df = user_df[user_df[valid_user_metrics[0]] > 0]
+        user_df = user_df.sort_values(by=valid_user_metrics[0], ascending=False)
+        fig_user = px.bar(
+            user_df,
+            x='Username', y=valid_user_metrics[0], color='Username',
+            title='Total Operations per User',
+            color_discrete_sequence=chart_colors, text=valid_user_metrics[0]
+        )
+        fig_user.update_traces(textposition='outside', marker_line_width=0, marker_line_color="#333", textfont_size=16)
+        fig_user = style_chart(fig_user)
+        st.plotly_chart(fig_user, use_container_width=True)
+    else:
+        st.info("No data available for the selected metrics in the current filters.")
+
+    st.markdown("### 🛠️ Performance by Workstation")
+    ws_df = filtered_df.groupby('Workstations').sum(numeric_only=True).reset_index()
+    valid_ws_metrics = []
+    for col in metrics_to_show:
+        if (
+            col in ws_df.columns
+            and pd.api.types.is_numeric_dtype(ws_df[col])
+            and ws_df[col].notna().sum() > 0
+            and (ws_df[col].fillna(0) != 0).any()
+        ):
+            valid_ws_metrics.append(col)
+    if valid_ws_metrics and not ws_df.empty:
+        ws_df = ws_df[ws_df[valid_ws_metrics[0]] > 0]
+        ws_df = ws_df.sort_values(by=valid_ws_metrics[0], ascending=False)
+        if len(valid_ws_metrics) == 1:
+            fig_ws = px.bar(
+                ws_df, x='Workstations', y=valid_ws_metrics[0], barmode='group',
+                title='Operations per Workstation', color_discrete_sequence=chart_colors
+            )
+        else:
+            fig_ws = px.bar(
+                ws_df, x='Workstations', y=valid_ws_metrics, barmode='group',
+                title='Operations per Workstation', color_discrete_sequence=chart_colors
+            )
+        fig_ws.update_traces(marker_line_width=0, marker_line_color="#333")
+        fig_ws = style_chart(fig_ws)
+        st.plotly_chart(fig_ws, use_container_width=True)
+    else:
+        st.info("No data available for the selected metrics in the current filters.")
+
+    st.markdown("### ⚙️ Efficiency Score")
+    st.caption("Efficiency = Total Refills / (Source Totes + Destination Totes). This gives a rough measure of how many refills are completed per tote moved.")
+    filtered_df['Efficiency'] = filtered_df['TotalRefills'] / (filtered_df['SourceTotes'] + filtered_df['DestinationTotes'])
+    eff_df = filtered_df.groupby('Username')['Efficiency'].mean().reset_index()
+    eff_df = eff_df[eff_df['Efficiency'] > 0]
+    eff_df = eff_df.sort_values(by='Efficiency', ascending=False)
+    if not eff_df.empty:
+        eff_df['Efficiency'] = eff_df['Efficiency'].round(0)
+        fig_eff = px.bar(
+            eff_df, x='Username', y='Efficiency', title='Average Efficiency per User',
+            color_discrete_sequence=chart_colors, text='Efficiency'
+        )
+        fig_eff.update_traces(
+            texttemplate='%{text:.0f}', 
+            textposition='outside', 
+            marker_line_width=0, 
+            marker_line_color="#333", 
+            textfont_size=16
+        )
+        fig_eff = style_chart(fig_eff)
+        st.plotly_chart(fig_eff, use_container_width=True)
+    else:
+        st.info("No data available for the selected metrics in the current filters.")
+
+    output = BytesIO()
+    filtered_df.to_csv(output, index=False)
+    st.download_button(
+        "Download Filtered CSV", 
+        data=output.getvalue(), 
+        file_name="filtered_picking_data.csv", 
+        mime="text/csv"
+    )
+else:
+    st.info("Please upload a CSV file to begin.")
