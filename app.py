@@ -1,3 +1,12 @@
+import zipfile
+import os
+
+# Ensure folder exists
+folder = "picking-report"
+os.makedirs(folder, exist_ok=True)
+
+# app.py contents
+app_py = """\
 import streamlit as st
 st.set_page_config(page_title="Picking Performance Dashboard", layout="wide")
 
@@ -6,13 +15,11 @@ import plotly.express as px
 from io import BytesIO
 from PIL import Image
 
-# --- THEME: ONLY DARK/BRANDED ---
 bg_color = "#DA362C"
 text_color = "white"
 chart_colors = ["#FFFFFF", "#FFD700", "#1E90FF"]
 
-# Styling injection
-st.markdown(f"""
+st.markdown(f\"\"\"
     <style>
         .stApp, .block-container, header, footer, .css-18ni7ap, .css-1d391kg, .css-1v0mbdj, .css-6qob1r, .st-emotion-cache-1v0mbdj {{
             background-color: {bg_color} !important;
@@ -25,9 +32,8 @@ st.markdown(f"""
             color: {text_color} !important;
         }}
     </style>
-""", unsafe_allow_html=True)
+\"\"\", unsafe_allow_html=True)
 
-# --- CHART STYLE FUNCTION ---
 def style_chart(fig):
     fig.update_layout(
         font=dict(family="Segoe UI, Arial", size=16, color="#FFF"),
@@ -61,27 +67,22 @@ def style_chart(fig):
     )
     return fig
 
-# Display logo
 logo = Image.open("The Roc.png")
 st.image(logo, width=200)
 
 st.title("📦 Picking Performance Dashboard")
 st.markdown("Upload your Picking Performance CSV file to begin analysis.")
 
-# File upload
 uploaded_file = st.file_uploader("Upload CSV", type="csv")
 
 if uploaded_file:
     df = pd.read_csv(uploaded_file)
-
-    # Clean column names and convert data types
     df.columns = df.columns.str.strip()
     df['Date'] = pd.to_datetime(df['Date'], dayfirst=True, errors='coerce')
     df['SourceTotes'] = pd.to_numeric(df['SourceTotes'], errors='coerce')
     df['DestinationTotes'] = pd.to_numeric(df['DestinationTotes'], errors='coerce')
     df['TotalRefills'] = pd.to_numeric(df['TotalRefills'], errors='coerce')
 
-    # Sidebar filters
     st.sidebar.header("Filters")
     users = st.sidebar.multiselect("Filter by User", options=df['Username'].dropna().unique(), default=df['Username'].dropna().unique())
     workstations = st.sidebar.multiselect("Filter by Workstation", options=df['Workstations'].dropna().unique(), default=df['Workstations'].dropna().unique())
@@ -106,13 +107,11 @@ if uploaded_file:
         (df['Date'].dt.date >= date_range[0]) & (df['Date'].dt.date <= date_range[1])
     ]
 
-    # --- Summary Metrics ---
     st.markdown("### 📊 Summary Metrics")
     col1, col2, col3, col4, col5 = st.columns(5)
     col1.metric("Total Source Totes", int(filtered_df['SourceTotes'].sum()))
     col2.metric("Total Destination Totes", int(filtered_df['DestinationTotes'].sum()))
     col3.metric("Total Refills", int(filtered_df['TotalRefills'].sum()))
-    # Best average performer
     best_user = filtered_df.copy()
     best_user['Efficiency'] = best_user['TotalRefills'] / (best_user['SourceTotes'] + best_user['DestinationTotes'])
     if not best_user.empty:
@@ -124,10 +123,7 @@ if uploaded_file:
         col4.markdown("-")
         col5.markdown("-")
 
-    # --- Additional High-Level Metrics ---
     st.markdown("### 🏅 High-Level Metrics")
-
-    # Top 3 Users by Refills
     top3_users = (
         filtered_df.groupby('Username')['TotalRefills']
         .sum()
@@ -142,7 +138,6 @@ if uploaded_file:
     else:
         st.info("No data for Top 3 Users.")
 
-    # Most Active Workstation
     most_active_ws = filtered_df.groupby('Workstations')['TotalRefills'].sum()
     if not most_active_ws.empty:
         ws_name = most_active_ws.idxmax()
@@ -151,7 +146,6 @@ if uploaded_file:
     else:
         st.info("No data for workstations.")
 
-    # Average Totes per User
     if not filtered_df.empty:
         avg_totes_per_user = (
             filtered_df.groupby('Username')[['SourceTotes', 'DestinationTotes']]
@@ -164,7 +158,6 @@ if uploaded_file:
     else:
         st.info("No data for users.")
 
-    # Day with Most Operations
     daily_totals = filtered_df.groupby('Date')[['SourceTotes','DestinationTotes','TotalRefills']].sum()
     if not daily_totals.empty:
         best_day = daily_totals['TotalRefills'].idxmax()
@@ -173,7 +166,6 @@ if uploaded_file:
     else:
         st.info("No data for day with most refills.")
 
-    # --- High-Level Summary Table ---
     st.markdown("### 📋 High-Level Summary Table")
     summary_df = pd.DataFrame({
         'Total Source Totes': [filtered_df['SourceTotes'].sum()],
@@ -183,11 +175,8 @@ if uploaded_file:
     })
     st.dataframe(summary_df)
 
-    # --- Performance Over Time ---
     st.markdown("### 📈 Performance Over Time")
     time_df = filtered_df.groupby('Date').sum(numeric_only=True).reset_index()
-
-    # Only plot if at least one metric is valid (exists, numeric, not all NaN/zero)
     valid_time_metrics = []
     for col in metrics_to_show:
         if (
@@ -210,7 +199,6 @@ if uploaded_file:
     else:
         st.info("No data available for the selected metrics in the current filters.")
 
-    # --- Performance by User ---
     st.markdown("### 👤 Performance by User")
     user_df = filtered_df.groupby('Username').sum(numeric_only=True).reset_index()
     valid_user_metrics = []
@@ -237,7 +225,6 @@ if uploaded_file:
     else:
         st.info("No data available for the selected metrics in the current filters.")
 
-    # --- Performance by Workstation ---
     st.markdown("### 🛠️ Performance by Workstation")
     ws_df = filtered_df.groupby('Workstations').sum(numeric_only=True).reset_index()
     valid_ws_metrics = []
@@ -268,7 +255,6 @@ if uploaded_file:
     else:
         st.info("No data available for the selected metrics in the current filters.")
 
-    # --- Efficiency Score ---
     st.markdown("### ⚙️ Efficiency Score")
     st.caption("Efficiency = Total Refills / (Source Totes + Destination Totes). This gives a rough measure of how many refills are completed per tote moved.")
     filtered_df['Efficiency'] = filtered_df['TotalRefills'] / (filtered_df['SourceTotes'] + filtered_df['DestinationTotes'])
@@ -276,7 +262,7 @@ if uploaded_file:
     eff_df = eff_df[eff_df['Efficiency'] > 0]
     eff_df = eff_df.sort_values(by='Efficiency', ascending=False)
     if not eff_df.empty:
-        eff_df['Efficiency'] = eff_df['Efficiency'].round(0)  # round to whole number
+        eff_df['Efficiency'] = eff_df['Efficiency'].round(0)
         fig_eff = px.bar(
             eff_df, x='Username', y='Efficiency', title='Average Efficiency per User',
             color_discrete_sequence=chart_colors, text='Efficiency'
@@ -287,11 +273,28 @@ if uploaded_file:
     else:
         st.info("No data available for the selected metrics in the current filters.")
 
-    # --- Download filtered data ---
     output = BytesIO()
     filtered_df.to_csv(output, index=False)
     st.download_button("Download Filtered CSV", data=output.getvalue(), file_name="filtered_picking_data.csv", mime="text/csv")
 else:
     st.info("Please upload a CSV file to begin.")
+"""
+
+with open(f"{folder}/app.py", "w", encoding="utf-8") as f:
+    f.write(app_py)
+
+with open(f"{folder}/requirements.txt", "w", encoding="utf-8") as f:
+    f.write("streamlit\npandas\nplotly\npillow\n")
+
+# Placeholder logo
+from PIL import Image as PilImage, ImageDraw
+img = PilImage.new("RGBA", (400, 120), color="#DA362C")
+d = ImageDraw.Draw(img)
+d.text((20, 45), "The Roc", fill=(255,255,255))
+img.save(f"{folder}/The Roc.png")
+
+with zipfile.ZipFile("picking-report.zip", "w") as z:
+    for fname in ["app.py", "requirements.txt", "The Roc.png"]:
+        z.write(f"{folder}/{fname}", arcname=f"picking-report/{fname}")
 
 
