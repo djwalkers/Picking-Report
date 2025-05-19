@@ -250,3 +250,4 @@ if uploaded_file:
     st.download_button("Download Filtered CSV", data=output.getvalue(), file_name="filtered_picking_data.csv", mime="text/csv")
 else:
     st.info("Please upload a CSV file to begin.")
+
