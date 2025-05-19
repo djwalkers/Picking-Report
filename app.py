@@ -280,14 +280,16 @@ if uploaded_file:
         user_df = user_df[user_df[valid_user_metrics[0]] > 0]
         user_df = user_df.sort_values(by=valid_user_metrics[0], ascending=False)
         fig_user = px.bar(
-            user_df,
-            x='Username', y=valid_user_metrics[0], color='Username',
-            title='Total Operations per User',
-            color_discrete_sequence=chart_colors, text=valid_user_metrics[0]
-        )
-        fig_user.update_traces(textposition='outside', marker_line_width=0, marker_line_color="#333", textfont_size=16)
-        fig_user = style_chart(fig_user)
-        st.plotly_chart(fig_user, use_container_width=True)
+    user_df,
+    x='Username', y=valid_user_metrics[0], color='Username',
+    title='Total Operations per User',
+    color_discrete_sequence=chart_colors, text=valid_user_metrics[0]
+)
+fig_user.update_traces(textposition='outside', marker_line_width=0, marker_line_color="#333", textfont_size=16)
+fig_user.update_layout(showlegend=False)  # 👈 This line removes the legend
+fig_user = style_chart(fig_user)
+st.plotly_chart(fig_user, use_container_width=True)
+
     else:
         st.info("No data available for the selected metrics in the current filters.")
 
