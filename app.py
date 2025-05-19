@@ -67,7 +67,6 @@ def style_chart(fig):
     )
     return fig
 
-# Load logo
 logo = Image.open("The Roc.png")
 st.image(logo, width=200)
 
@@ -142,6 +141,7 @@ if uploaded_file:
         (df['DateTime'] >= date_start) & (df['DateTime'] <= (date_end + pd.Timedelta(days=1) - pd.Timedelta(seconds=1)))
     ]
 
+    # Summary metrics
     st.markdown("### 📊 Summary Metrics")
     col1, col2, col3, col4, col5 = st.columns(5)
     col1.metric("Total Source Totes", int(filtered_df['SourceTotes'].sum()))
@@ -168,11 +168,7 @@ if uploaded_file:
     }).reset_index()
     st.dataframe(shift_df.style.format(precision=0), use_container_width=True)
 
-    def flag_outliers(group, col):
-        m = group[col].mean()
-        group['Is_Outlier'] = group[col] < (0.5 * m)
-        return group
-
+    # Outlier calculation
     user_stats = filtered_df.groupby('Username')[['TotalRefills','SourceTotes','DestinationTotes']].sum().reset_index()
     user_stats['Efficiency'] = user_stats['TotalRefills'] / (user_stats['SourceTotes'] + user_stats['DestinationTotes'])
     mean_eff = user_stats['Efficiency'].mean()
@@ -197,30 +193,40 @@ if uploaded_file:
     ws_stats['Refill_Outlier'] = ws_stats['TotalRefills'] < (0.5 * mean_refills_ws)
     outlier_ws = ws_stats[(ws_stats['Eff_Outlier']) | (ws_stats['Refill_Outlier'])]
 
-    # ---- Outliers Section, now with means as reference ----
+    # --- Outliers section (mean always visible!) ---
     st.markdown("### ⚠️ Outliers (< 50% of Mean)")
 
+    # User Outliers
+    st.markdown(f"**User Outliers**  \n<small>Mean Efficiency: <b>{mean_eff:.2f}</b>, Mean Refills: <b>{mean_refills:.0f}</b></small>", unsafe_allow_html=True)
     if not outlier_users.empty:
-        st.markdown(f"**User Outliers** (mean Efficiency: {mean_eff:.2f}, mean Refills: {mean_refills:.0f}):")
         for _, row in outlier_users.iterrows():
             st.markdown(
                 f"<span class='outlier'>User: {row['Username']} | Efficiency: {row['Efficiency']:.2f} | Refills: {int(row['TotalRefills'])}</span>",
                 unsafe_allow_html=True)
+    else:
+        st.info("No user outliers detected in current filters.")
+
+    # Day Outliers
+    st.markdown(f"**Day Outliers**  \n<small>Mean Efficiency: <b>{mean_eff_day:.2f}</b>, Mean Refills: <b>{mean_refills_day:.0f}</b></small>", unsafe_allow_html=True)
     if not outlier_days.empty:
-        st.markdown(f"**Day Outliers** (mean Efficiency: {mean_eff_day:.2f}, mean Refills: {mean_refills_day:.0f}):")
         for _, row in outlier_days.iterrows():
             st.markdown(
                 f"<span class='outlier'>Day: {row['Date']} | Efficiency: {row['Efficiency']:.2f} | Refills: {int(row['TotalRefills'])}</span>",
                 unsafe_allow_html=True)
+    else:
+        st.info("No day outliers detected in current filters.")
+
+    # Workstation Outliers
+    st.markdown(f"**Workstation Outliers**  \n<small>Mean Efficiency: <b>{mean_eff_ws:.2f}</b>, Mean Refills: <b>{mean_refills_ws:.0f}</b></small>", unsafe_allow_html=True)
     if not outlier_ws.empty:
-        st.markdown(f"**Workstation Outliers** (mean Efficiency: {mean_eff_ws:.2f}, mean Refills: {mean_refills_ws:.0f}):")
         for _, row in outlier_ws.iterrows():
             st.markdown(
                 f"<span class='outlier'>WS: {row['Workstations']} | Efficiency: {row['Efficiency']:.2f} | Refills: {int(row['TotalRefills'])}</span>",
                 unsafe_allow_html=True)
-    if outlier_users.empty and outlier_days.empty and outlier_ws.empty:
-        st.info("No outliers detected in current filters.")
+    else:
+        st.info("No workstation outliers detected in current filters.")
 
+    # --------- Rest of dashboard (unchanged) -----------
     st.markdown("### 📈 Performance Over Time")
     time_df = filtered_df.groupby('Date').sum(numeric_only=True).reset_index()
     valid_time_metrics = []
