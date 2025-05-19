@@ -187,10 +187,16 @@ if uploaded_file:
     st.markdown("### 📈 Performance Over Time")
     time_df = filtered_df.groupby('Date').sum(numeric_only=True).reset_index()
 
-    valid_time_metrics = [
-        col for col in metrics_to_show
-        if col in time_df.columns and time_df[col].notna().sum() > 0 and time_df[col].sum() > 0
-    ]
+    # Only plot if at least one metric is valid (exists, numeric, not all NaN/zero)
+    valid_time_metrics = []
+    for col in metrics_to_show:
+        if (
+            col in time_df.columns
+            and pd.api.types.is_numeric_dtype(time_df[col])
+            and time_df[col].notna().sum() > 0
+            and (time_df[col].fillna(0) != 0).any()
+        ):
+            valid_time_metrics.append(col)
 
     if valid_time_metrics and not time_df.empty:
         fig_time = px.line(
@@ -207,10 +213,15 @@ if uploaded_file:
     # --- Performance by User ---
     st.markdown("### 👤 Performance by User")
     user_df = filtered_df.groupby('Username').sum(numeric_only=True).reset_index()
-    valid_user_metrics = [
-        col for col in metrics_to_show
-        if col in user_df.columns and user_df[col].notna().sum() > 0 and user_df[col].sum() > 0
-    ]
+    valid_user_metrics = []
+    for col in metrics_to_show:
+        if (
+            col in user_df.columns
+            and pd.api.types.is_numeric_dtype(user_df[col])
+            and user_df[col].notna().sum() > 0
+            and (user_df[col].fillna(0) != 0).any()
+        ):
+            valid_user_metrics.append(col)
     if valid_user_metrics and not user_df.empty:
         user_df = user_df[user_df[valid_user_metrics[0]] > 0]
         user_df = user_df.sort_values(by=valid_user_metrics[0], ascending=False)
@@ -229,10 +240,15 @@ if uploaded_file:
     # --- Performance by Workstation ---
     st.markdown("### 🛠️ Performance by Workstation")
     ws_df = filtered_df.groupby('Workstations').sum(numeric_only=True).reset_index()
-    valid_ws_metrics = [
-        col for col in metrics_to_show
-        if col in ws_df.columns and ws_df[col].notna().sum() > 0 and ws_df[col].sum() > 0
-    ]
+    valid_ws_metrics = []
+    for col in metrics_to_show:
+        if (
+            col in ws_df.columns
+            and pd.api.types.is_numeric_dtype(ws_df[col])
+            and ws_df[col].notna().sum() > 0
+            and (ws_df[col].fillna(0) != 0).any()
+        ):
+            valid_ws_metrics.append(col)
     if valid_ws_metrics and not ws_df.empty:
         ws_df = ws_df[ws_df[valid_ws_metrics[0]] > 0]
         ws_df = ws_df.sort_values(by=valid_ws_metrics[0], ascending=False)
@@ -277,4 +293,5 @@ if uploaded_file:
     st.download_button("Download Filtered CSV", data=output.getvalue(), file_name="filtered_picking_data.csv", mime="text/csv")
 else:
     st.info("Please upload a CSV file to begin.")
+
 
