@@ -196,39 +196,39 @@ if uploaded_file:
     # --- Outliers section (mean always visible and with descriptions) ---
     st.markdown("### ⚠️ Outliers (< 50% of Mean)")
 
-    # User Outliers
-    st.markdown(f"""
-**User Outliers**  
-<small>
-Users whose average efficiency or total refills are less than 50% of the group mean. This may indicate consistently underperforming team members.<br>
-Mean Efficiency: <b>{mean_eff:.2f}</b>, Mean Refills: <b>{mean_refills:.0f}</b>
-</small>
-""", unsafe_allow_html=True)
-    if not outlier_users.empty:
-        for _, row in outlier_users.iterrows():
-            st.markdown(
-                f"<span class='outlier'>User: {row['Username']} | Efficiency: {row['Efficiency']:.2f} | Refills: {int(row['TotalRefills'])}</span>",
-                unsafe_allow_html=True)
-    else:
-        st.info("No user outliers detected in current filters.")
+    # --- User Outliers HIDDEN ---
+    # st.markdown(f"""
+    # **User Outliers**  
+    # <small>
+    # Users whose average efficiency or total refills are less than 50% of the group mean. This may indicate consistently underperforming team members.<br>
+    # Mean Efficiency: <b>{mean_eff:.2f}</b>, Mean Refills: <b>{mean_refills:.0f}</b>
+    # </small>
+    # """, unsafe_allow_html=True)
+    # if not outlier_users.empty:
+    #     for _, row in outlier_users.iterrows():
+    #         st.markdown(
+    #             f"<span class='outlier'>User: {row['Username']} | Efficiency: {row['Efficiency']:.2f} | Refills: {int(row['TotalRefills'])}</span>",
+    #             unsafe_allow_html=True)
+    # else:
+    #     st.info("No user outliers detected in current filters.")
 
-    # Day Outliers
-    st.markdown(f"""
-**Day Outliers**  
-<small>
-Dates with average efficiency or total refills below 50% of the group mean. These may be days with unexpected operational issues or lower throughput.<br>
-Mean Efficiency: <b>{mean_eff_day:.2f}</b>, Mean Refills: <b>{mean_refills_day:.0f}</b>
-</small>
-""", unsafe_allow_html=True)
-    if not outlier_days.empty:
-        for _, row in outlier_days.iterrows():
-            st.markdown(
-                f"<span class='outlier'>Day: {row['Date']} | Efficiency: {row['Efficiency']:.2f} | Refills: {int(row['TotalRefills'])}</span>",
-                unsafe_allow_html=True)
-    else:
-        st.info("No day outliers detected in current filters.")
+    # --- Day Outliers HIDDEN ---
+    # st.markdown(f"""
+    # **Day Outliers**  
+    # <small>
+    # Dates with average efficiency or total refills below 50% of the group mean. These may be days with unexpected operational issues or lower throughput.<br>
+    # Mean Efficiency: <b>{mean_eff_day:.2f}</b>, Mean Refills: <b>{mean_refills_day:.0f}</b>
+    # </small>
+    # """, unsafe_allow_html=True)
+    # if not outlier_days.empty:
+    #     for _, row in outlier_days.iterrows():
+    #         st.markdown(
+    #             f"<span class='outlier'>Day: {row['Date']} | Efficiency: {row['Efficiency']:.2f} | Refills: {int(row['TotalRefills'])}</span>",
+    #             unsafe_allow_html=True)
+    # else:
+    #     st.info("No day outliers detected in current filters.")
 
-    # Workstation Outliers
+    # --- Workstation Outliers ONLY ---
     st.markdown(f"""
 **Workstation Outliers**  
 <small>
@@ -374,5 +374,3 @@ Mean Efficiency: <b>{mean_eff_ws:.2f}</b>, Mean Refills: <b>{mean_refills_ws:.0f
     )
 else:
     st.info("Please upload a CSV file to begin.")
-
-
