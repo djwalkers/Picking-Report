@@ -173,43 +173,44 @@ if uploaded_file:
     # --- Performance Over Time ---
     st.markdown("### 📈 Performance Over Time")
     time_df = filtered_df.groupby('Date').sum(numeric_only=True).reset_index()
-    if metrics_to_show:
+    if metrics_to_show and not time_df.empty:
         fig_time = px.line(
             time_df, x='Date', y=metrics_to_show, title='Operational Totals Over Time',
             color_discrete_sequence=chart_colors
         )
-        # Add value labels to each trace (one for each metric)
         for trace in fig_time.data:
             trace.update(mode='lines+markers+text', text=[f"{y:.0f}" for y in trace.y], textposition='top center', textfont_size=16)
         fig_time = style_chart(fig_time)
         st.plotly_chart(fig_time, use_container_width=True)
+    else:
+        st.info("No data available for the selected metrics in the current filters.")
 
     # --- Performance by User ---
     st.markdown("### 👤 Performance by User")
     user_df = filtered_df.groupby('Username').sum(numeric_only=True).reset_index()
-    user_df = user_df[user_df[metrics_to_show[0]] > 0]
-    user_df = user_df.sort_values(by=metrics_to_show[0], ascending=False)
-    fig_user = px.bar(
-        user_df,
-        x='Username', y=metrics_to_show[0], color='Username',
-        title='Total Operations per User',
-        color_discrete_sequence=chart_colors, text=metrics_to_show[0]
-    )
-    fig_user.update_traces(textposition='outside', marker_line_width=0, marker_line_color="#333", textfont_size=16)
-    fig_user = style_chart(fig_user)
-    st.plotly_chart(fig_user, use_container_width=True)
+    if metrics_to_show and not user_df.empty and metrics_to_show[0] in user_df.columns and user_df[metrics_to_show[0]].sum() > 0:
+        user_df = user_df[user_df[metrics_to_show[0]] > 0]
+        user_df = user_df.sort_values(by=metrics_to_show[0], ascending=False)
+        fig_user = px.bar(
+            user_df,
+            x='Username', y=metrics_to_show[0], color='Username',
+            title='Total Operations per User',
+            color_discrete_sequence=chart_colors, text=metrics_to_show[0]
+        )
+        fig_user.update_traces(textposition='outside', marker_line_width=0, marker_line_color="#333", textfont_size=16)
+        fig_user = style_chart(fig_user)
+        st.plotly_chart(fig_user, use_container_width=True)
+    else:
+        st.info("No data available for the selected metrics in the current filters.")
 
     # --- Performance by Workstation ---
     st.markdown("### 🛠️ Performance by Workstation")
     ws_df = filtered_df.groupby('Workstations').sum(numeric_only=True).reset_index()
-
-    # Only proceed if there's at least one valid metric in ws_df and it's not all zeros
     valid_metrics = [metric for metric in metrics_to_show if metric in ws_df.columns and ws_df[metric].sum() > 0]
     if valid_metrics:
         ws_df = ws_df[ws_df[valid_metrics[0]] > 0]
         if not ws_df.empty:
             ws_df = ws_df.sort_values(by=valid_metrics[0], ascending=False)
-            # NO VALUE LABELS FOR THIS CHART TO AVOID ERRORS
             if len(valid_metrics) == 1:
                 fig_ws = px.bar(
                     ws_df, x='Workstations', y=valid_metrics[0], barmode='group',
@@ -235,14 +236,17 @@ if uploaded_file:
     eff_df = filtered_df.groupby('Username')['Efficiency'].mean().reset_index()
     eff_df = eff_df[eff_df['Efficiency'] > 0]
     eff_df = eff_df.sort_values(by='Efficiency', ascending=False)
-    eff_df['Efficiency'] = eff_df['Efficiency'].round(0)  # round to whole number
-    fig_eff = px.bar(
-        eff_df, x='Username', y='Efficiency', title='Average Efficiency per User',
-        color_discrete_sequence=chart_colors, text='Efficiency'
-    )
-    fig_eff.update_traces(texttemplate='%{text:.0f}', textposition='outside', marker_line_width=0, marker_line_color="#333", textfont_size=16)
-    fig_eff = style_chart(fig_eff)
-    st.plotly_chart(fig_eff, use_container_width=True)
+    if not eff_df.empty:
+        eff_df['Efficiency'] = eff_df['Efficiency'].round(0)  # round to whole number
+        fig_eff = px.bar(
+            eff_df, x='Username', y='Efficiency', title='Average Efficiency per User',
+            color_discrete_sequence=chart_colors, text='Efficiency'
+        )
+        fig_eff.update_traces(texttemplate='%{text:.0f}', textposition='outside', marker_line_width=0, marker_line_color="#333", textfont_size=16)
+        fig_eff = style_chart(fig_eff)
+        st.plotly_chart(fig_eff, use_container_width=True)
+    else:
+        st.info("No data available for the selected metrics in the current filters.")
 
     # --- Download filtered data ---
     output = BytesIO()
@@ -250,4 +254,5 @@ if uploaded_file:
     st.download_button("Download Filtered CSV", data=output.getvalue(), file_name="filtered_picking_data.csv", mime="text/csv")
 else:
     st.info("Please upload a CSV file to begin.")
+
 
