@@ -189,8 +189,7 @@ if uploaded_file:
     st.markdown(f"""
 **Workstations Needing Attention**  
 <small>
-Workstations with average efficiency or total refills less than 50% of the overall average.<br>
-<b>Average (“Mean”)</b> is the sum of all values divided by how many there are. It’s used here as a typical performance level.<br>
+Workstations with average efficiency or total refills less than 50% of the overall average.
 Average Efficiency: <b>{mean_eff_ws:.2f}</b>, Average Refills: <b>{mean_refills_ws:.0f}</b>
 </small>
 """, unsafe_allow_html=True)
