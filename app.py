@@ -189,7 +189,7 @@ if uploaded_file:
     st.markdown(f"""
 **Workstation Outliers**  
 <small>
-Workstations with average efficiency or total refills less than 50% of the mean. This may point to problem areas or underutilized equipment.<br>
+Workstations with below average efficiency or total refills less than 50% average. This may point to problem areas or underutilized equipment.<br>
 Mean Efficiency: <b>{mean_eff_ws:.2f}</b>, Mean Refills: <b>{mean_refills_ws:.0f}</b>
 </small>
 """, unsafe_allow_html=True)
